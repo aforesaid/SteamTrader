@@ -5,14 +5,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Interfaces" />
-    <Folder Include="Models" />
-    <Folder Include="Options" />
-    <Folder Include="Services" />
+    <ProjectReference Include="..\SteamTrader.Infrastructure\SteamTrader.Infrastructure.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\SteamTrader.Infrastructure\SteamTrader.Infrastructure.csproj" />
+    <Folder Include="Services" />
   </ItemGroup>
 
 </Project>

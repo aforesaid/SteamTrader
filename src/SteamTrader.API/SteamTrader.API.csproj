@@ -64,11 +64,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Controllers" />
-    <Folder Include="Services\BackgroundServices" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\SteamTrader.Core\SteamTrader.Core.csproj" />
   </ItemGroup>
 
