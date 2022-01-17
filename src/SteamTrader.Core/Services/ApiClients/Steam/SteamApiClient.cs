@@ -1,26 +1,25 @@
 ﻿using System;
 using System.Net;
-using System.Net.Http;
 using System.Threading.Tasks;
 using System.Web;
 using Newtonsoft.Json;
 using SteamTrader.Core.Services.ApiClients.Steam.Requests;
+using SteamTrader.Core.Services.Proxy;
 
 namespace SteamTrader.Core.Services.ApiClients.Steam
 {
     public class SteamApiClient : ISteamApiClient, IDisposable
     {
-        private readonly HttpClient _httpClient;
-
-        public SteamApiClient()
+        private readonly ProxyBalancer _proxyBalancer;
+        public SteamApiClient(ProxyBalancer proxyBalancer)
         {
-            _httpClient = new HttpClient();
+            _proxyBalancer = proxyBalancer;
         }
 
         public async Task<ApiGetSalesForItemResponse> GetSalesForItem(string itemName)
         {
             var uri = GetSalesForItemUri(itemName);
-            var response = await _httpClient
+            var response = await _proxyBalancer.GetNext()
                 .GetAsync(uri);
 
             if (response.StatusCode is HttpStatusCode.TooManyRequests)
@@ -40,7 +39,7 @@ namespace SteamTrader.Core.Services.ApiClients.Steam
 
         public void Dispose()
         {
-            _httpClient?.Dispose();
+            _proxyBalancer?.Dispose();
         }
     }
 }

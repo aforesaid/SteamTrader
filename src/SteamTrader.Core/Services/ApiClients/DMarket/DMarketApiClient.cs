@@ -15,7 +15,7 @@ namespace SteamTrader.Core.Services.ApiClients.DMarket
             _httpClient = new HttpClient();
         }
 
-        public async Task<ApiGetOffersResponse> GetMarketplaceItems(string gameId, string cursor)
+        public async Task<ApiGetOffersResponse> GetMarketplaceItems(string gameId, string cursor = null)
         {
             var uri = GetMarketplaceItemsUri(gameId, cursor);
             var response = await _httpClient.GetAsync(uri);
@@ -26,8 +26,7 @@ namespace SteamTrader.Core.Services.ApiClients.DMarket
         }
 
         public static string GetMarketplaceItemsUri(string gameId, string cursor = "")
-            =>
-                $"https://api.dmarket.com/exchange/v1/market/items?side=market&orderBy=best_deals&orderDir=desc&priceFrom=0&priceTo=0&gameId={gameId}&types=dmarket&cursor={cursor}&limit=100&currency=USD";
+            => $"https://api.dmarket.com/exchange/v1/market/items?side=market&orderBy=updated&orderDir=desc&priceFrom=0&priceTo=0&gameId={gameId}&types=dmarket&cursor={cursor}&limit=100&currency=USD";
 
         public void Dispose()
         {
