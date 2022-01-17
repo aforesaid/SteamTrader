@@ -24,8 +24,8 @@ namespace SteamTrader.Core.BackgroundServices
         {
             _logger.LogInformation("DMarketBackgroundService Service running");
 
-            _timer = new Timer(DoWork, null, TimeSpan.Zero, 
-                TimeSpan.FromMinutes(1));
+            // _timer = new Timer(DoWork, null, TimeSpan.Zero, 
+            //     TimeSpan.FromMinutes(1));
 
             return Task.CompletedTask;
         }
