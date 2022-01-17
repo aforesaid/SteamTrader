@@ -6,6 +6,8 @@ EXPOSE 443
 FROM mcr.microsoft.com/dotnet/sdk:5.0 AS build
 WORKDIR /src
 COPY ["SteamTrader.API/SteamTrader.API.csproj", "SteamTrader.API/"]
+COPY ["SteamTrader.API/appsettings.Development.json", "SteamTrader.API/appsettings.json"]
+
 RUN dotnet restore "SteamTrader.API/SteamTrader.API.csproj"
 COPY . .
 WORKDIR "/src/SteamTrader.API"
