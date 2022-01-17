@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using Microsoft.Extensions.Options;
 using SteamTrader.Core.Configuration;
 
 namespace SteamTrader.Core.Services.Proxy
@@ -13,9 +14,9 @@ namespace SteamTrader.Core.Services.Proxy
         private int _currentIndex = 0;
         private List<HttpClient> _httpClients;
 
-        public ProxyBalancer(Settings settings)
+        public ProxyBalancer(IOptions<Settings> settings)
         {
-            _settings = settings;
+            _settings = settings.Value;
             Configure();
         }
 

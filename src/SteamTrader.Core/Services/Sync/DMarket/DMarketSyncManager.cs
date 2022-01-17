@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using SteamTrader.Core.Configuration;
 using SteamTrader.Core.Services.ApiClients.DMarket;
 using SteamTrader.Core.Services.ApiClients.DMarket.Requests;
@@ -17,12 +18,12 @@ namespace SteamTrader.Core.Services.Sync.DMarket
         private readonly Settings _settings;
 
         public DMarketSyncManager(IDMarketApiClient dMarketApiClient,
-            ISteamApiClient steamApiClient, Settings settings,
+            ISteamApiClient steamApiClient, IOptions<Settings> settings,
             ILogger<DMarketSyncManager> logger)
         {
             _dMarketApiClient = dMarketApiClient;
             _steamApiClient = steamApiClient;
-            _settings = settings;
+            _settings = settings.Value;
             _logger = logger;
         }
 
