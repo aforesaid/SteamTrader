@@ -2,6 +2,7 @@ using System;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 using Serilog;
+using SteamTrader.Core.BackgroundServices;
 
 namespace SteamTrader.API
 {
@@ -35,6 +36,7 @@ namespace SteamTrader.API
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
                     webBuilder.UseStartup<Startup>();
-                }).UseSerilog(logger);
+                })
+                .UseSerilog(logger);
     }
 }

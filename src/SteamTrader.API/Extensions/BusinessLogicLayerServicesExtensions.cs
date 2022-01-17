@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using SteamTrader.Core.BackgroundServices;
 using SteamTrader.Core.Services.ApiClients.AntiCaptca;
 using SteamTrader.Core.Services.ApiClients.DMarket;
 using SteamTrader.Core.Services.ApiClients.Steam;
@@ -17,6 +18,9 @@ namespace SteamTrader.API.Extensions
 
             services.AddSingleton<ProxyBalancer>();
             services.AddScoped<DMarketSyncManager>();
+
+            services.AddSingleton<DMarketBackgroundService>();
+            services.AddHostedService<DMarketBackgroundService>();
         }
     }
 }
