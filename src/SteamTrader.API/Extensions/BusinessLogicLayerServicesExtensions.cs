@@ -12,12 +12,12 @@ namespace SteamTrader.API.Extensions
     {
         public static void AddBusinessLogicLayerServicesExtensions(this IServiceCollection services)
         {
-            services.AddScoped<IAntiCaptchaApiClient, AntiCaptchaApiClient>();
-            services.AddScoped<IDMarketApiClient, DMarketApiClient>();
-            services.AddScoped<ISteamApiClient, SteamApiClient>();
+            services.AddSingleton<IAntiCaptchaApiClient, AntiCaptchaApiClient>();
+            services.AddSingleton<IDMarketApiClient, DMarketApiClient>();
+            services.AddSingleton<ISteamApiClient, SteamApiClient>();
 
             services.AddSingleton<ProxyBalancer>();
-            services.AddScoped<DMarketSyncManager>();
+            services.AddSingleton<DMarketSyncManager>();
 
             services.AddSingleton<DMarketBackgroundService>();
             services.AddHostedService<DMarketBackgroundService>();

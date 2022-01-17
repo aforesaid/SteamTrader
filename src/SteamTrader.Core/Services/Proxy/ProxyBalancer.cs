@@ -11,7 +11,7 @@ namespace SteamTrader.Core.Services.Proxy
     public class ProxyBalancer : IDisposable
     {
         private readonly Settings _settings;
-        private int _currentIndex = 0;
+        private int _currentIndex;
         private List<HttpClient> _httpClients;
 
         public ProxyBalancer(IOptions<Settings> settings)
@@ -24,9 +24,16 @@ namespace SteamTrader.Core.Services.Proxy
         {
             var httpHandlers = _settings.Proxies.Select(x => new HttpClientHandler
             {
-                Proxy = new WebProxy($"https://{x.Ip}:{x.Port}"),
-                Credentials = new NetworkCredential(x.Login, x.Password)
+                Proxy = new WebProxy(new Uri($"http://{x.Ip}:{x.Port}"))
+                {
+                    UseDefaultCredentials = false,
+                    Credentials = new NetworkCredential(x.Login, x.Password)
+                },
+                UseProxy = true,
+                UseDefaultCredentials = false
             });
+
+            httpHandlers = httpHandlers.Append(new HttpClientHandler());
 
             _httpClients = httpHandlers.Select(x => new HttpClient(x))
                 .ToList();

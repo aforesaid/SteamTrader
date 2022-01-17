@@ -27,36 +27,39 @@ namespace SteamTrader.Core.Services.Sync.DMarket
             _logger = logger;
         }
 
-        public async Task Sync(int limit = 1000)
+        public async Task Sync(int limit = 100)
         {
-            ApiGetOffersResponse response;
-            string cursor = null;
-            do
+            foreach (var gameId in _settings.DMarketSettings.BuyGameIds)
             {
-                response = await _dMarketApiClient.GetMarketplaceItems(_settings.DMarketSettings.BuyGameId, cursor);
-                cursor = response.Cursor;
-                limit -= response.Objects.Length;
-
-                foreach (var item in response.Objects.Where(x => x.Extra.TradeLock <= _settings.DMarketSettings.MaxTradeBan))
+                ApiGetOffersResponse response;
+                string cursor = null;
+                do
                 {
-                    var sellPrice = decimal.Parse(item.Price.Usd) / 100;
-                    var steamDetails = await _steamApiClient.GetSalesForItem(item.Title);
-                    const int minVolume = 2;
-                    if (!steamDetails.Success || !(steamDetails.Volume > minVolume) ||
-                        !steamDetails.LowestPriceValue.HasValue) continue;
+                    response = await _dMarketApiClient.GetMarketplaceItems(gameId, cursor);
+                    cursor = response.Cursor;
+                    limit -= response.Objects.Length;
 
-                    var minPrice = Math.Min(steamDetails.LowestPriceValue ?? 0, steamDetails.MedianPriceValue ?? 0);
-                    var profit = minPrice * (1 - _settings.SteamCommissionPercent / 100) - sellPrice;
-
-                    var margin = profit / sellPrice;
-                    if (margin > _settings.TargetDMarketToSteamProfitPercent / 100)
+                    foreach (var item in response.Objects.Where(x => x.Extra.TradeLock <= _settings.DMarketSettings.MaxTradeBan))
                     {
-                        _logger.LogWarning(
-                            "Потенциальная покупка с DMarket-a: steamLowPrice: {0}, dmarketPrice: {1}, marginPercent {3} title: {4}",
-                            minPrice, sellPrice, _settings.TargetDMarketToSteamProfitPercent, item.Title);
+                        var sellPrice = decimal.Parse(item.Price.Usd) / 100;
+                        var steamDetails = await _steamApiClient.GetSalesForItem(item.Title);
+                        const int minVolume = 2;
+                        if (!steamDetails.Success || !(steamDetails.VolumeValue > minVolume) ||
+                            !steamDetails.LowestPriceValue.HasValue) continue;
+
+                        var minPrice = Math.Min(steamDetails.LowestPriceValue ?? 0, steamDetails.MedianPriceValue ?? 0);
+                        var profit = minPrice * (1 - _settings.SteamCommissionPercent / 100) - sellPrice;
+
+                        var margin = profit / sellPrice;
+                        if (margin > _settings.TargetDMarketToSteamProfitPercent / 100)
+                        {
+                            _logger.LogWarning(
+                                "Потенциальная покупка с DMarket-a: steamLowPrice: {0}, dmarketPrice: {1}, marginPercent {3} title: {4}",
+                                minPrice, sellPrice, _settings.TargetDMarketToSteamProfitPercent, item.Title);
+                        }
                     }
-                }
-            } while (response.Objects.Length > 0 && cursor != null && limit > 0);
+                } while (response.Objects.Length > 0 && cursor != null && limit > 0);
+            }
         }
     }
 }

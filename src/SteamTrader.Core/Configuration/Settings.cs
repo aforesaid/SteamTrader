@@ -11,13 +11,13 @@
     public class DMarketSettings
     {
         public long MaxTradeBan { get; set; }
-        public string BuyGameId { get; set; }
+        public string[] BuyGameIds { get; set; }
     }
 
     public class ProxyConfigItem
     {
         public string Ip { get; set; }
-        public string Port { get; set; }
+        public int Port { get; set; }
         public string Login { get; set; }
         public string Password { get; set; }
     }

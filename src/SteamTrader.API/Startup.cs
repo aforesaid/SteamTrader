@@ -22,7 +22,7 @@ namespace SteamTrader.API
             services.AddControllers();
             services.AddBusinessLogicLayerServicesExtensions();
 
-            services.AddOptions<Settings>(nameof(Settings));
+            services.Configure<Settings>(Configuration.GetSection(nameof(Settings)));
         }
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {

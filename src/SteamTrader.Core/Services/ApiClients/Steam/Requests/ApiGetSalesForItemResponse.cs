@@ -12,7 +12,7 @@ namespace SteamTrader.Core.Services.ApiClients.Steam.Requests
         public string LowestPrice { get; set; }
 
         [JsonProperty("volume", NullValueHandling = NullValueHandling.Include)]
-        public long? Volume { get; set; }
+        public string Volume { get; set; }
 
         [JsonProperty("median_price", NullValueHandling = NullValueHandling.Include)]
         public string MedianPrice { get; set; }
@@ -29,6 +29,16 @@ namespace SteamTrader.Core.Services.ApiClients.Steam.Requests
                     .ToArray());
                 return decimal.Parse(value, CultureInfo.InvariantCulture);
 
+            }
+        }
+        public decimal? VolumeValue
+        {
+            get
+            {
+                if (string.IsNullOrWhiteSpace(Volume))
+                    return null;
+                
+                return decimal.Parse(Volume, CultureInfo.InvariantCulture);
             }
         }
 

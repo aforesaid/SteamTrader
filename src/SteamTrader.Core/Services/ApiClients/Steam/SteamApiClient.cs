@@ -19,16 +19,19 @@ namespace SteamTrader.Core.Services.ApiClients.Steam
         public async Task<ApiGetSalesForItemResponse> GetSalesForItem(string itemName)
         {
             var uri = GetSalesForItemUri(itemName);
-            var response = await _proxyBalancer.GetNext()
-                .GetAsync(uri);
+            var currentProxy = _proxyBalancer.GetNext();
+            var response = await currentProxy.GetAsync(uri);
 
             if (response.StatusCode is HttpStatusCode.TooManyRequests)
-                throw new ArgumentException("Need to update proxy");
+                throw new ArgumentException($"Need to update proxy {currentProxy.BaseAddress}");
             if (!response.IsSuccessStatusCode)
                 return null;
 
             var responseString = await response.Content.ReadAsStringAsync();
 
+
+            await Task.Delay(300);
+            
             var result = JsonConvert.DeserializeObject<ApiGetSalesForItemResponse>(responseString);
             return result;
         }
