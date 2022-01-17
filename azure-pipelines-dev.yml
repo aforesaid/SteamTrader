@@ -12,8 +12,8 @@ variables:
 
   tag: 'latest'
   serviceName: 'dev_api'
+  vmImageName: 'ubuntu-latest'
 
-  
 stages:
 - stage: Build
   displayName: Build stage
