@@ -17,6 +17,9 @@ spec:
           image: steamtrader/api-prod-service
           ports:
           - containerPort: 80
+	  env:
+	  - name: SEQ
+            value: "#{SEQ}#"
           tty: true
       dnsConfig:
         nameservers:
