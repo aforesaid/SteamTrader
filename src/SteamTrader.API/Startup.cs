@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using SteamTrader.API.Extensions;
+using SteamTrader.Core.Configuration;
 
 namespace SteamTrader.API
 {
@@ -20,6 +21,8 @@ namespace SteamTrader.API
         {
             services.AddControllers();
             services.AddBusinessLogicLayerServicesExtensions();
+
+            services.AddOptions<Settings>(nameof(Settings));
         }
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {

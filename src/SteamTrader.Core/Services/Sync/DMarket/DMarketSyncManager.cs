@@ -26,17 +26,17 @@ namespace SteamTrader.Core.Services.Sync.DMarket
             _logger = logger;
         }
 
-        public async Task Sync(string gameId = "a8db", int limit = 1000)
+        public async Task Sync(int limit = 1000)
         {
             ApiGetOffersResponse response;
             string cursor = null;
             do
             {
-                response = await _dMarketApiClient.GetMarketplaceItems(gameId, cursor);
+                response = await _dMarketApiClient.GetMarketplaceItems(_settings.DMarketSettings.BuyGameId, cursor);
                 cursor = response.Cursor;
                 limit -= response.Objects.Length;
 
-                foreach (var item in response.Objects.Where(x => x.Extra.TradeLock <= 0))
+                foreach (var item in response.Objects.Where(x => x.Extra.TradeLock <= _settings.DMarketSettings.MaxTradeBan))
                 {
                     var sellPrice = decimal.Parse(item.Price.Usd) / 100;
                     var steamDetails = await _steamApiClient.GetSalesForItem(item.Title);
