@@ -1,0 +1,61 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30907.101
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SteamTrader.Core", "SteamTrader.Core\SteamTrader.Core.csproj", "{5B7F3444-0BBF-4E3E-B8BA-EA731CFC9B4C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SteamTrader.API", "SteamTrader.API\SteamTrader.API.csproj", "{48DA8F8E-B4B8-4696-BDB8-5C4422D68438}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{C92E6119-A07D-4B34-9830-CC2D6A368CC0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SteamTrader.UnitTests", "tests\SteamTrader.UnitTests\SteamTrader.UnitTests.csproj", "{0D908E44-3B48-449D-A67C-2EDF3B5CFDC5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SteamTrader.IntegrationTests", "tests\SteamTrader.IntegrationTests\SteamTrader.IntegrationTests.csproj", "{76DA54E4-970D-4C61-8A18-9491CA017815}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SteamTrader.Domain", "SteamTrader.Domain\SteamTrader.Domain.csproj", "{CED20E58-448C-4B56-B0DB-EB1CBD8FF15A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SteamTrader.Infrastructure", "SteamTrader.Infrastructure\SteamTrader.Infrastructure.csproj", "{3E8734F4-C10D-4189-B0CB-699A44CF59E3}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{5B7F3444-0BBF-4E3E-B8BA-EA731CFC9B4C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5B7F3444-0BBF-4E3E-B8BA-EA731CFC9B4C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5B7F3444-0BBF-4E3E-B8BA-EA731CFC9B4C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5B7F3444-0BBF-4E3E-B8BA-EA731CFC9B4C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{48DA8F8E-B4B8-4696-BDB8-5C4422D68438}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{48DA8F8E-B4B8-4696-BDB8-5C4422D68438}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{48DA8F8E-B4B8-4696-BDB8-5C4422D68438}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{48DA8F8E-B4B8-4696-BDB8-5C4422D68438}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0D908E44-3B48-449D-A67C-2EDF3B5CFDC5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0D908E44-3B48-449D-A67C-2EDF3B5CFDC5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0D908E44-3B48-449D-A67C-2EDF3B5CFDC5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0D908E44-3B48-449D-A67C-2EDF3B5CFDC5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{76DA54E4-970D-4C61-8A18-9491CA017815}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{76DA54E4-970D-4C61-8A18-9491CA017815}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{76DA54E4-970D-4C61-8A18-9491CA017815}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{76DA54E4-970D-4C61-8A18-9491CA017815}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CED20E58-448C-4B56-B0DB-EB1CBD8FF15A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CED20E58-448C-4B56-B0DB-EB1CBD8FF15A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CED20E58-448C-4B56-B0DB-EB1CBD8FF15A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CED20E58-448C-4B56-B0DB-EB1CBD8FF15A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3E8734F4-C10D-4189-B0CB-699A44CF59E3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3E8734F4-C10D-4189-B0CB-699A44CF59E3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3E8734F4-C10D-4189-B0CB-699A44CF59E3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3E8734F4-C10D-4189-B0CB-699A44CF59E3}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {D4E5F3E1-3B4B-4577-857A-87C16D3098D5}
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{0D908E44-3B48-449D-A67C-2EDF3B5CFDC5} = {C92E6119-A07D-4B34-9830-CC2D6A368CC0}
+		{76DA54E4-970D-4C61-8A18-9491CA017815} = {C92E6119-A07D-4B34-9830-CC2D6A368CC0}
+	EndGlobalSection
+EndGlobal

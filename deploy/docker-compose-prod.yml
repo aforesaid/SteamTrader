@@ -1,0 +1,40 @@
+version: '3.4'
+
+services:
+    api:
+        image: steamtrader/api-prod-service
+        depends_on:
+            - postgres
+            - seq
+        environment:
+          - SEQ=prod_seq
+        networks:
+          - backend
+    postgres:
+        image: postgres:13-alpine
+        environment:
+           - POSTGRES_PASSWORD=password
+    seq:
+        image: datalust/seq
+        environment:
+           - ACCEPT_EULA=Y
+        networks:
+           - traefik-public
+           - backend
+        deploy:
+          labels:
+            - traefik.enable=true
+            - traefik.docker.network=traefik-public
+            - traefik.constraint-label=traefik-public
+            - traefik.http.routers.prod_seq-http.rule=Host(`${DOMAIN?Variable not set}`)
+            - traefik.http.routers.prod_seq-http.entrypoints=http
+            - traefik.http.routers.prod_seq-http.middlewares=https-redirect
+            - traefik.http.routers.prod_seq-https.rule=Host(`${DOMAIN?Variable not set}`)
+            - traefik.http.routers.prod_seq-https.entrypoints=https
+            - traefik.http.routers.prod_seq-https.tls=true
+            - traefik.http.routers.prod_seq-https.tls.certresolver=le
+            - traefik.http.services.prod_seq.loadbalancer.server.port=80
+networks:
+    traefik-public:
+       external: true
+    backend:

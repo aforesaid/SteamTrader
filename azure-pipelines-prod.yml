@@ -1,0 +1,49 @@
+trigger:
+- master
+
+resources:
+- repo: self
+
+variables:
+
+  imageRepository: 'steamtrader/api-prod-service'
+  buildContextPath: './src'
+  dockerfilePath: './src/SteamTrader.API/Dockerfile'
+
+  serviceName: 'prod_api'
+  tag: 'latest'
+
+  
+stages:
+- stage: Build
+  displayName: Build stage
+  jobs:  
+  - job: Build
+    displayName: Build
+    pool: 'Default'
+    steps:
+    - task: Docker@2
+      displayName: Build and push an image to container registry
+      inputs:
+        containerRegistry: 'dockerRegistryServiceConnection'
+        repository: '$(imageRepository)'
+        command: 'buildAndPush'
+        Dockerfile: '$(dockerfilePath)'
+        buildContext: '$(buildContextPath)'
+        tags: '$(tag)'
+    - upload: manifests
+      artifact: manifests
+- stage: Deploy
+  displayName: Deploy
+  jobs:  
+  - job: Deploy
+    displayName: Deploy
+    pool: 'Default'
+    steps:
+    - download: none
+    - task: SSH@0
+      inputs:
+        sshEndpoint: 'swarm manager'
+        runOptions: 'commands'
+        commands: 'docker service update --image $(imageRepository) $(serviceName) --with-registry-auth'
+        readyTimeout: '20000'

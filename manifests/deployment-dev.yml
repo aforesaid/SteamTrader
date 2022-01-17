@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-dev-service
+spec:
+  selector:
+    matchLabels:
+      app: api-dev-service
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: api-dev-service
+    spec:
+      containers:
+        - name: api-dev-service
+          image: steamtrader/api-dev-service
+          ports:
+          - containerPort: 80
+          tty: true
+      dnsConfig:
+        nameservers:
+          - 8.8.8.8
+          - 8.8.4.4
