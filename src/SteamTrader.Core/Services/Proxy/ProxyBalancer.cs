@@ -12,7 +12,7 @@ namespace SteamTrader.Core.Services.Proxy
 {
     public class ProxyBalancer : IDisposable
     {
-        private List<ProxyDetails> _proxyList;
+        public List<ProxyDetails> ProxyList;
         private Timer _timer;
         private readonly Settings _settings;
 
@@ -37,7 +37,7 @@ namespace SteamTrader.Core.Services.Proxy
 
             httpHandlers = httpHandlers.Append(new HttpClientHandler());
 
-            _proxyList = httpHandlers.Select(x => new ProxyDetails(new HttpClient(x)
+            ProxyList = httpHandlers.Select(x => new ProxyDetails(new HttpClient(x)
                 {
                     Timeout = _settings.HttpTimeout
                 }, _settings.ProxyLimitTime))
@@ -53,7 +53,7 @@ namespace SteamTrader.Core.Services.Proxy
             var timeStarted = DateTime.Now;
             do
             {
-                proxy = _proxyList.FirstOrDefault(x => !x.IsLocked && !x.Reserved);
+                proxy = ProxyList.FirstOrDefault(x => !x.IsLocked && !x.Reserved);
                 proxy?.SetReserved();
 
                 await Task.Delay(50);
@@ -66,16 +66,16 @@ namespace SteamTrader.Core.Services.Proxy
         }
 
         public int GetCountUnlockedProxy()
-            => _proxyList.Count(x => !x.IsLocked);
+            => ProxyList.Count(x => !x.IsLocked);
 
         public void UpdateProxyStatus()
         {
-            _proxyList.ForEach(x => x.TryUnlock());
+            ProxyList.ForEach(x => x.TryUnlock());
         }
 
         public void Dispose()
         {
-            foreach (var httpClient in _proxyList)
+            foreach (var httpClient in ProxyList)
             { 
                 httpClient.Dispose();   
             }

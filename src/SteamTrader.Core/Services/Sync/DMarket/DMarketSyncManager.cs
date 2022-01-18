@@ -18,6 +18,7 @@ namespace SteamTrader.Core.Services.Sync.DMarket
         private readonly ILogger<DMarketSyncManager> _logger;
         private readonly IDMarketApiClient _dMarketApiClient;
         private readonly ISteamApiClient _steamApiClient;
+        private readonly ProxyBalancer _proxyBalancer;
         private readonly Settings _settings;
         
         private DateTime? _lastSyncTime;
@@ -25,18 +26,26 @@ namespace SteamTrader.Core.Services.Sync.DMarket
         public DMarketSyncManager(IDMarketApiClient dMarketApiClient,
             ISteamApiClient steamApiClient,
             IOptions<Settings> settings,
-            ILogger<DMarketSyncManager> logger)
+            ILogger<DMarketSyncManager> logger,
+            ProxyBalancer proxyBalancer)
         {
             _dMarketApiClient = dMarketApiClient;
             _steamApiClient = steamApiClient;
             _settings = settings.Value;
-            _logger = logger; 
+            _logger = logger;
+            _proxyBalancer = proxyBalancer;
         }
 
         public async Task Sync(int limit = 100)
         {
             try
             {
+                if (_proxyBalancer.GetCountUnlockedProxy() * 2 < _proxyBalancer.ProxyList.Count())
+                {
+                    _logger.LogWarning("{0}: Так как меньше половины прокси разблокированы, синхронизация отменяется",
+                        nameof(DMarketSyncManager));
+                    return;
+                }
                 var syncTime = DateTime.Now;
                 foreach (var gameId in _settings.DMarketSettings.BuyGameIds)
                 {
