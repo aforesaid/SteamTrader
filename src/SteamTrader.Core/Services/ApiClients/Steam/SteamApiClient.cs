@@ -48,6 +48,10 @@ namespace SteamTrader.Core.Services.ApiClients.Steam
                 var result = JsonConvert.DeserializeObject<ApiGetSalesForItemResponse>(responseString);
                 return result;
             }
+            catch (TimeoutException)
+            {
+                return await GetSalesForItem(itemName);
+            }
             catch (Exception e)
             {
                 _logger.LogError(e, "{0}: Не удалось обработать получение данных из Steam, запрос {@1}",
