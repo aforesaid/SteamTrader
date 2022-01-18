@@ -48,7 +48,7 @@ namespace SteamTrader.Core.Services.ApiClients.Steam
                 var result = JsonConvert.DeserializeObject<ApiGetSalesForItemResponse>(responseString);
                 return result;
             }
-            catch (TimeoutException)
+            catch (TaskCanceledException)
             {
                 return await GetSalesForItem(itemName);
             }
