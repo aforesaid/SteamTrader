@@ -46,19 +46,22 @@ namespace SteamTrader.Core.Services.Sync.DMarket
                 do
                 {
                     response = await _dMarketApiClient.GetMarketplaceItems(gameId, cursor);
+                    if (response?.Objects == null || !response.Objects.Any())
+                        break;
+                    
                     cursor = response.Cursor;
                     limit -= response.Objects.Length;
                     
                     _logger.LogInformation("{0}: Количество новых ордеров на одной странице {1}, начинаю их обработку",
                         nameof(DMarketSyncManager), response.Objects.Length);
-
+                    
                     var filteringItems =
                         response.Objects.Where(x => x.Extra.TradeLock <= _settings.DMarketSettings.MaxTradeBan);
 
                     var resultItems = new List<ApiGetOffersItem>();
                     using var semaphoreSlim = new SemaphoreSlim(10);
                     
-                    var tasks = filteringItems.Select(async (x, i) =>
+                    var tasks = filteringItems.Select(async x =>
                     {
                         await semaphoreSlim.WaitAsync();
                         try
