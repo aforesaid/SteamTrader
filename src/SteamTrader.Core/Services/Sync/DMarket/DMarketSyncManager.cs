@@ -53,7 +53,7 @@ namespace SteamTrader.Core.Services.Sync.DMarket
                     do
                     {
                         response = await _dMarketApiClient.GetMarketplaceItems(gameId, cursor);
-                        if (response?.Objects == null || !response.Objects.Any())
+                        if (response?.Objects == null)
                             break;
                         
                         cursor = response.Cursor;
@@ -69,6 +69,9 @@ namespace SteamTrader.Core.Services.Sync.DMarket
                         {
                             filteringItems = filteringItems.Where(x => x.CreatedAt > _lastSyncTime.Value.Ticks);
                         }
+                        
+                        _logger.LogInformation("{0}: Количество предварительно подходящих ордеров составляет {1}",
+                            nameof(DMarketSyncManager), filteringItems.Count());
 
                         var resultItems = new List<ApiGetOffersItem>();
                         using var semaphoreSlim = new SemaphoreSlim(10);
