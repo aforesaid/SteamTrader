@@ -32,7 +32,14 @@ namespace SteamTrader.Core.BackgroundServices
 
         private async void DoWork(object state)
         {
-            await _dMarketSyncManager.Sync();
+            try
+            { 
+                await _dMarketSyncManager.Sync();
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "Не удалось выполнить синхронизацию данных с DMarket");
+            }
         }
 
         public Task StopAsync(CancellationToken stoppingToken)

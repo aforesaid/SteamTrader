@@ -31,11 +31,18 @@ namespace SteamTrader.Core.BackgroundServices
         }
         private void DoWork(object state)
         {
-            _proxyBalancer.UpdateProxyStatus();
-            var notLockedProxyCount = _proxyBalancer.GetCountUnlockedProxy();
-           
-            _logger.LogInformation("{0}: Количество не заблокированных прокси {1}",
-                nameof(ProxyBalancerUpdaterBackgroundService), notLockedProxyCount);
+            try
+            {
+                _proxyBalancer.UpdateProxyStatus();
+                var notLockedProxyCount = _proxyBalancer.GetCountUnlockedProxy();
+               
+                _logger.LogInformation("{0}: Количество не заблокированных прокси {1}",
+                    nameof(ProxyBalancerUpdaterBackgroundService), notLockedProxyCount);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "Не удалось обновить информацию о прокси");
+            }
         }
 
         public Task StopAsync(CancellationToken cancellationToken)
