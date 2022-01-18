@@ -50,13 +50,16 @@ namespace SteamTrader.Core.Services.Proxy
         public async Task<ProxyDetails> GetFreeProxy()
         {
             ProxyDetails proxy;
-            
+            var timeStarted = DateTime.Now;
             do
             {
                 proxy = _proxyList.FirstOrDefault(x => !x.IsLocked && !x.Reserved);
                 proxy?.SetReserved();
 
                 await Task.Delay(50);
+
+                if ((DateTime.Now - timeStarted).Seconds > 10)
+                    throw new NotFoundSteamFreeProxyException();
             } while (proxy == null);
             
             return proxy;
@@ -124,5 +127,12 @@ namespace SteamTrader.Core.Services.Proxy
                 Unlock();
             }
         }
+    }
+
+    public class NotFoundSteamFreeProxyException : Exception
+    {
+        public NotFoundSteamFreeProxyException(string message = "Не найдены не заблокированные прокси на стороне Steam") 
+            : base(message)
+        { }
     }
 }
