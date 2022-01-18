@@ -128,7 +128,8 @@ namespace SteamTrader.Core.Services.Sync.DMarket
             }
             catch (NotFoundSteamFreeProxyException)
             {
-                _logger.LogWarning("По причине заблокированных всех прокси синхронизация останавливается");
+                _logger.LogWarning("{0}: По причине заблокированных всех прокси синхронизация останавливается",
+                    nameof(DMarketSyncManager));
             }
         }
     }
