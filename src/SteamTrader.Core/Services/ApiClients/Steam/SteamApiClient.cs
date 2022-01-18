@@ -43,7 +43,7 @@ namespace SteamTrader.Core.Services.ApiClients.Steam
                 var responseString = await response.Content.ReadAsStringAsync();
 
 
-                await Task.Delay(new Random().Next(500, 800));
+                await Task.Delay(new Random().Next(1000, 2000));
 
                 var result = JsonConvert.DeserializeObject<ApiGetSalesForItemResponse>(responseString);
                 return result;
