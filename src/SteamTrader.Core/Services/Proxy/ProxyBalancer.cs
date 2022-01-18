@@ -105,11 +105,15 @@ namespace SteamTrader.Core.Services.Proxy
             => Reserved = false;
 
         public void Unlock()
-            => IsLocked = false;
+        {
+            IsLocked = false;
+            Reserved = false;
+        }
 
         public void Lock()
         {
             IsLocked = true;
+            Reserved = false;
             LastLimitTime = DateTime.Now;
         }
 
