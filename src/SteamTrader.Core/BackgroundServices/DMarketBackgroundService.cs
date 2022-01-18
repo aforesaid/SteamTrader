@@ -7,7 +7,7 @@ using SteamTrader.Core.Services.Sync.DMarket;
 
 namespace SteamTrader.Core.BackgroundServices
 {
-    public class DMarketBackgroundService : IHostedService
+    public class DMarketBackgroundService : IHostedService, IDisposable
     {
         private readonly ILogger<DMarketBackgroundService> _logger;
         private readonly DMarketSyncManager _dMarketSyncManager;
@@ -22,24 +22,23 @@ namespace SteamTrader.Core.BackgroundServices
 
         public Task StartAsync(CancellationToken stoppingToken)
         {
-            _logger.LogInformation("DMarketBackgroundService Service running");
+            _logger.LogInformation("{0} service running", nameof(DMarketBackgroundService));
 
             _timer = new Timer(DoWork, null, TimeSpan.Zero, 
-                 TimeSpan.FromMinutes(2));
+                 TimeSpan.FromMinutes(1));
 
             return Task.CompletedTask;
         }
 
-        private async void DoWork(object? state)
+        private async void DoWork(object state)
         {
-            _logger.LogInformation(
-                "DMarketBackgroundService is working");
             await _dMarketSyncManager.Sync();
         }
 
         public Task StopAsync(CancellationToken stoppingToken)
         {
-            _logger.LogInformation("DMarketBackgroundService is stopping");
+            _logger.LogInformation("{0} is stopping",
+                nameof(DMarketBackgroundService));
 
             _timer?.Change(Timeout.Infinite, 0);
 

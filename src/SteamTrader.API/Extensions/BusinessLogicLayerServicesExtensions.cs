@@ -20,7 +20,9 @@ namespace SteamTrader.API.Extensions
             services.AddSingleton<DMarketSyncManager>();
 
             services.AddSingleton<DMarketBackgroundService>();
+            
             services.AddHostedService<DMarketBackgroundService>();
+            services.AddHostedService<ProxyBalancerUpdaterBackgroundService>();
         }
     }
 }
