@@ -23,10 +23,10 @@ namespace SteamTrader.Core.Services.ApiClients.Steam
         public async Task<ApiGetSalesForItemResponse> GetSalesForItem(string itemName)
         {
             var currentProxy = await _proxyBalancer.GetFreeProxy();
+            var uri = GetSalesForItemUri(itemName);
 
             try
             {
-                var uri = GetSalesForItemUri(itemName);
                 var response = await currentProxy.HttpClient.GetAsync(uri);
 
                 if (response.StatusCode is HttpStatusCode.TooManyRequests)
@@ -50,7 +50,8 @@ namespace SteamTrader.Core.Services.ApiClients.Steam
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "Не удалось обработать получение данных из Steam");
+                _logger.LogError(e, "{0}: Не удалось обработать получение данных из Steam, запрос {@1}",
+                    nameof(SteamApiClient), uri);
                 throw;
             }
             finally
