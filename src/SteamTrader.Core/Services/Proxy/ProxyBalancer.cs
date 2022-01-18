@@ -37,7 +37,10 @@ namespace SteamTrader.Core.Services.Proxy
 
             httpHandlers = httpHandlers.Append(new HttpClientHandler());
 
-            _proxyList = httpHandlers.Select(x => new ProxyDetails(x, _settings.ProxyLimitTime))
+            _proxyList = httpHandlers.Select(x => new ProxyDetails(new HttpClient(x)
+                {
+                    Timeout = _settings.HttpTimeout
+                }, _settings.ProxyLimitTime))
                 .ToList();
 
             _timer = new Timer(1000);
@@ -78,9 +81,9 @@ namespace SteamTrader.Core.Services.Proxy
 
     public class ProxyDetails : IDisposable
     {
-        public ProxyDetails(HttpMessageHandler httpHandler, TimeSpan limitTime, DateTime? lastLimitTime = null)
+        public ProxyDetails(HttpClient httpClient, TimeSpan limitTime, DateTime? lastLimitTime = null)
         {
-            HttpClient = new HttpClient(httpHandler);
+            HttpClient = httpClient;
             LimitTime = limitTime;
             LastLimitTime = lastLimitTime;
         }

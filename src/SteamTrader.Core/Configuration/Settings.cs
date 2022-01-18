@@ -7,6 +7,8 @@ namespace SteamTrader.Core.Configuration
         public DMarketSettings DMarketSettings { get; set; }
         public ProxyConfigItem[] Proxies { get; set; }
         public TimeSpan ProxyLimitTime { get; set; }
+        public TimeSpan HttpTimeout { get; set; }
+
         public decimal SteamCommissionPercent { get; set; }
         public decimal TargetDMarketToSteamProfitPercent { get; set; }
     }
