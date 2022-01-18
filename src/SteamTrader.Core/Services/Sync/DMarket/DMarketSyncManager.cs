@@ -19,6 +19,8 @@ namespace SteamTrader.Core.Services.Sync.DMarket
         private readonly IDMarketApiClient _dMarketApiClient;
         private readonly ISteamApiClient _steamApiClient;
         private readonly Settings _settings;
+        
+        private DateTime? _lastSyncTime;
 
         public DMarketSyncManager(IDMarketApiClient dMarketApiClient,
             ISteamApiClient steamApiClient,
@@ -35,10 +37,11 @@ namespace SteamTrader.Core.Services.Sync.DMarket
         {
             try
             {
+                var syncTime = DateTime.Now;
                 foreach (var gameId in _settings.DMarketSettings.BuyGameIds)
                 {
                     var maxLimit = limit;
-
+                    
                     _logger.LogInformation("{0}: По игре {1} начинаю синхронизацию последних {2} ордеров",
                         nameof(DMarketSyncManager), gameId, maxLimit);
                     _logger.BeginScope("Сихронизация по игре {0}, количество элементов {1}",
@@ -61,6 +64,11 @@ namespace SteamTrader.Core.Services.Sync.DMarket
                         
                         var filteringItems =
                             response.Objects.Where(x => x.Extra.TradeLock <= _settings.DMarketSettings.MaxTradeBan);
+
+                        if (_lastSyncTime.HasValue)
+                        {
+                            filteringItems = filteringItems.Where(x => x.CreatedAt > _lastSyncTime.Value.Ticks);
+                        }
 
                         var resultItems = new List<ApiGetOffersItem>();
                         using var semaphoreSlim = new SemaphoreSlim(10);
@@ -90,7 +98,7 @@ namespace SteamTrader.Core.Services.Sync.DMarket
                                     resultItems.Add(x);
                                 }
 
-                                await Task.Delay(new Random().Next(1000, 2000));
+                                await Task.Delay(new Random().Next(1000, 3000));
                             }
                             finally
                             {
@@ -103,6 +111,8 @@ namespace SteamTrader.Core.Services.Sync.DMarket
                             nameof(DMarketSyncManager), gameId);
                     } while (response.Objects.Length > 0 && cursor != null && maxLimit > 0);
                 }
+
+                _lastSyncTime = syncTime;
             }
             catch (NotFoundSteamFreeProxyException)
             {
