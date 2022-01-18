@@ -51,9 +51,13 @@ namespace SteamTrader.Core.Services.ApiClients.Steam
             catch (TaskCanceledException)
             {
                 currentProxy.Lock();
-                
+
                 await Task.Yield();
                 return await GetSalesForItem(itemName);
+            }
+            catch (NotFoundSteamFreeProxyException)
+            {
+                throw;
             }
             catch (Exception e)
             {
