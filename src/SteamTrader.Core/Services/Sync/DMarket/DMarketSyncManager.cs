@@ -35,10 +35,12 @@ namespace SteamTrader.Core.Services.Sync.DMarket
         {
             foreach (var gameId in _settings.DMarketSettings.BuyGameIds)
             {
+                var maxLimit = limit;
+
                 _logger.LogInformation("{0}: По игре {1} начинаю синхронизацию последних {2} ордеров",
-                    nameof(DMarketSyncManager), gameId, limit);
+                    nameof(DMarketSyncManager), gameId, maxLimit);
                 _logger.BeginScope("Сихронизация по игре {0}, количество элементов {1}",
-                    gameId, limit);
+                    gameId, maxLimit);
                 
                 ApiGetOffersResponse response;
                 string cursor = null;
@@ -50,7 +52,7 @@ namespace SteamTrader.Core.Services.Sync.DMarket
                         break;
                     
                     cursor = response.Cursor;
-                    limit -= response.Objects.Length;
+                    maxLimit -= response.Objects.Length;
                     
                     _logger.LogInformation("{0}: Количество новых ордеров на одной странице {1}, начинаю их обработку",
                         nameof(DMarketSyncManager), response.Objects.Length);
@@ -97,7 +99,7 @@ namespace SteamTrader.Core.Services.Sync.DMarket
                     await Task.WhenAll(tasks);
                     _logger.LogInformation("{0}: Завершаю синхронизацию страницы по игре {1}",
                         nameof(DMarketSyncManager), gameId);
-                } while (response.Objects.Length > 0 && cursor != null && limit > 0);
+                } while (response.Objects.Length > 0 && cursor != null && maxLimit > 0);
             }
         }
     }
