@@ -51,7 +51,7 @@ namespace SteamTrader.Core.Services.ApiClients.Steam
                     }
                     catch (Exception)
                     {
-                        await Task.Delay(500);
+                        await Task.Delay(3000);
                         currentRetryCount++;
 
                         if (retryCount > currentRetryCount)
