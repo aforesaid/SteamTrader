@@ -25,11 +25,10 @@ namespace SteamTrader.Core.Services.ApiClients.DMarket
 
         public async Task<ApiGetOffersResponse> GetMarketplaceItems(string gameId, decimal balance, string cursor = null)
         {
-            var uri = DMarketEndpoints.GetMarketplaceItemsUri(gameId, balance, cursor);
+            var uri = DMarketEndpoints.BaseUrl + DMarketEndpoints.GetMarketplaceItemsUri(gameId, balance, cursor);
 
-            var requestMessage = CreateRequestMessage<string>(uri, HttpMethod.Get, false);
+            var response = await _httpClient.GetAsync(uri);
             
-            var response = await _httpClient.SendAsync(requestMessage);
             var responseString = await response.Content.ReadAsStringAsync();
 
             var result = JsonConvert.DeserializeObject<ApiGetOffersResponse>(responseString);
@@ -48,7 +47,7 @@ namespace SteamTrader.Core.Services.ApiClients.DMarket
             return result;
         }
 
-        public HttpRequestMessage CreateRequestMessage<TRequest>(string uri, HttpMethod method, bool hasBody, TRequest request = default)
+        private HttpRequestMessage CreateRequestMessage<TRequest>(string uri, HttpMethod method, bool hasBody, TRequest request = default)
         {
             var requestMessage = new HttpRequestMessage
             {
@@ -69,7 +68,7 @@ namespace SteamTrader.Core.Services.ApiClients.DMarket
 
             var unixTimeRequest = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds();
 
-            signString = $"GET/account/v1/balance{unixTimeRequest}";
+            signString += $"{unixTimeRequest}";
             var sign = DMarketSignatureHelper.CreateSignature(_dMarketSettings.PublicKey, _dMarketSettings.PrivateKey, signString);
             
             requestMessage.Headers.Add("X-Api-Key", _dMarketSettings.PublicKey);
