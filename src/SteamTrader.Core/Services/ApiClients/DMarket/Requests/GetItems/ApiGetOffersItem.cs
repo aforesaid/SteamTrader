@@ -1,7 +1,7 @@
 ﻿using System;
 using Newtonsoft.Json;
 
-namespace SteamTrader.Core.Services.ApiClients.DMarket.Requests
+namespace SteamTrader.Core.Services.ApiClients.DMarket.Requests.GetItems
 {
         public sealed class ApiGetOffersItem
         {

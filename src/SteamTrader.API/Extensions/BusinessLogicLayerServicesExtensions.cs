@@ -16,13 +16,12 @@ namespace SteamTrader.API.Extensions
             services.AddSingleton<IDMarketApiClient, DMarketApiClient>();
             services.AddSingleton<ISteamApiClient, SteamApiClient>();
 
-            services.AddSingleton<ProxyBalancer>();
+            services.AddSingleton<SteamProxyBalancer>();
             services.AddSingleton<DMarketSyncManager>();
 
             services.AddSingleton<DMarketBackgroundService>();
             
             services.AddHostedService<DMarketBackgroundService>();
-            services.AddHostedService<ProxyBalancerUpdaterBackgroundService>();
         }
     }
 }

@@ -15,6 +15,8 @@ namespace SteamTrader.Core.Configuration
 
     public class DMarketSettings
     {
+        public string PublicKey { get; set; }
+        public string PrivateKey { get; set; }
         public long MaxTradeBan { get; set; }
         public string[] BuyGameIds { get; set; }
     }

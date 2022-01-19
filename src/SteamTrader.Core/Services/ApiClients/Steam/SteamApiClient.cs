@@ -11,18 +11,18 @@ namespace SteamTrader.Core.Services.ApiClients.Steam
 {
     public class SteamApiClient : ISteamApiClient, IDisposable
     {
-        private readonly ProxyBalancer _proxyBalancer;
+        private readonly SteamProxyBalancer _steamProxyBalancer;
         private readonly ILogger<SteamApiClient> _logger;
-        public SteamApiClient(ProxyBalancer proxyBalancer, 
+        public SteamApiClient(SteamProxyBalancer steamProxyBalancer, 
             ILogger<SteamApiClient> logger)
         {
-            _proxyBalancer = proxyBalancer;
+            _steamProxyBalancer = steamProxyBalancer;
             _logger = logger;
         }
 
         public async Task<ApiGetSalesForItemResponse> GetSalesForItem(string itemName, string gameId)
         {
-            var currentProxy = await _proxyBalancer.GetFreeProxy();
+            var currentProxy = await _steamProxyBalancer.GetFreeProxy();
 
             var appId = GetAppIdByGameId(gameId);
             var uri = GetSalesForItemUri(itemName, appId);
@@ -35,7 +35,6 @@ namespace SteamTrader.Core.Services.ApiClients.Steam
                 {
                     currentProxy.Lock();
 
-                    await Task.Yield();
                     return await GetSalesForItem(itemName, gameId);
                 }
 
@@ -43,10 +42,7 @@ namespace SteamTrader.Core.Services.ApiClients.Steam
                     return null;
 
                 var responseString = await response.Content.ReadAsStringAsync();
-
-
-                await Task.Delay(new Random().Next(1000, 3000));
-
+                
                 var result = JsonConvert.DeserializeObject<ApiGetSalesForItemResponse>(responseString);
                 return result;
             }
@@ -86,7 +82,7 @@ namespace SteamTrader.Core.Services.ApiClients.Steam
             };
         public void Dispose()
         {
-            _proxyBalancer?.Dispose();
+            _steamProxyBalancer?.Dispose();
         }
     }
 }

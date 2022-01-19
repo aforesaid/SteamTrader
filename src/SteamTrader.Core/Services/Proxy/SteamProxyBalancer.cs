@@ -10,13 +10,13 @@ using SteamTrader.Core.Configuration;
 
 namespace SteamTrader.Core.Services.Proxy
 {
-    public class ProxyBalancer : IDisposable
+    public class SteamProxyBalancer : IDisposable
     {
-        public List<ProxyDetails> ProxyList;
+        private List<ProxyDetails> _proxyList;
         private Timer _timer;
         private readonly Settings _settings;
 
-        public ProxyBalancer(IOptions<Settings> settings)
+        public SteamProxyBalancer(IOptions<Settings> settings)
         {
             _settings = settings.Value;
             Configure();
@@ -37,14 +37,16 @@ namespace SteamTrader.Core.Services.Proxy
 
             httpHandlers = httpHandlers.Append(new HttpClientHandler());
 
-            ProxyList = httpHandlers.Select(x => new ProxyDetails(new HttpClient(x)
+            _proxyList = httpHandlers.Select(x => new ProxyDetails(new HttpClient(x)
                 {
                     Timeout = _settings.HttpTimeout
                 }, _settings.ProxyLimitTime))
                 .ToList();
 
             _timer = new Timer(1000);
-            _timer.Elapsed += ((_, _) => UpdateProxyStatus());
+            _timer.Elapsed += (_, _) => UpdateProxyStatus();
+            _timer.Enabled = true;
+            _timer.Start();
         }
 
         public async Task<ProxyDetails> GetFreeProxy()
@@ -53,29 +55,29 @@ namespace SteamTrader.Core.Services.Proxy
             var timeStarted = DateTime.Now;
             do
             {
-                proxy = ProxyList.FirstOrDefault(x => !x.IsLocked && !x.Reserved);
+                proxy = _proxyList.FirstOrDefault(x => !x.IsLocked && !x.Reserved);
                 proxy?.SetReserved();
-
-                await Task.Delay(50);
-
-                if ((DateTime.Now - timeStarted).Seconds > 10)
+                
+                if ((DateTime.Now - timeStarted).Minutes > _settings.ProxyLimitTime.Minutes * 2)
                     throw new NotFoundSteamFreeProxyException();
+                
+                await Task.Delay(_settings.ProxyLimitTime.Minutes);
             } while (proxy == null);
             
             return proxy;
         }
 
         public int GetCountUnlockedProxy()
-            => ProxyList.Count(x => !x.IsLocked);
+            => _proxyList.Count(x => !x.IsLocked);
 
         public void UpdateProxyStatus()
         {
-            ProxyList.ForEach(x => x.TryUnlock());
+            _proxyList.ForEach(x => x.TryUnlock());
         }
 
         public void Dispose()
         {
-            foreach (var httpClient in ProxyList)
+            foreach (var httpClient in _proxyList)
             { 
                 httpClient.Dispose();   
             }
