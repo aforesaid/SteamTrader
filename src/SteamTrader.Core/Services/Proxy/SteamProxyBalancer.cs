@@ -34,13 +34,11 @@ namespace SteamTrader.Core.Services.Proxy
                 UseProxy = true,
                 UseDefaultCredentials = false
             });
-
-            httpHandlers = httpHandlers.Append(new HttpClientHandler());
-
-            _proxyList = httpHandlers.Select(x => new ProxyDetails(new HttpClient(x)
+            
+            _proxyList = httpHandlers.Select((x, i) => new ProxyDetails(new HttpClient(x)
                 {
                     Timeout = _settings.HttpTimeout
-                }, _settings.ProxyLimitTime))
+                }, _settings.ProxyLimitTime, i))
                 .ToList();
 
             _timer = new Timer(1000);
@@ -86,10 +84,11 @@ namespace SteamTrader.Core.Services.Proxy
 
     public class ProxyDetails : IDisposable
     {
-        public ProxyDetails(HttpClient httpClient, TimeSpan limitTime, DateTime? lastLimitTime = null)
+        public ProxyDetails(HttpClient httpClient, TimeSpan limitTime, int proxyId, DateTime? lastLimitTime = null)
         {
             HttpClient = httpClient;
             LimitTime = limitTime;
+            ProxyId = proxyId;
             LastLimitTime = lastLimitTime;
         }
         public HttpClient HttpClient { get; set; }
@@ -97,6 +96,7 @@ namespace SteamTrader.Core.Services.Proxy
         public bool Reserved { get; set;}
         public DateTime? LastLimitTime { get; set; }
         public TimeSpan LimitTime { get; }
+        public int ProxyId { get; }
 
         public void Dispose()
         {

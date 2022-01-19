@@ -103,6 +103,7 @@ namespace SteamTrader.Core.Services.Sync.DMarket
                             {
                                 var sellPrice = decimal.Parse(x.Price.Usd) / 100;
                                 var steamDetails = await _steamApiClient.GetSalesForItem(x.Title, gameId);
+
                                 const int minVolume = 2;
 
                                 if (steamDetails is not
@@ -124,6 +125,11 @@ namespace SteamTrader.Core.Services.Sync.DMarket
                                         minPrice, sellPrice, margin, x.Title);
                                     resultItems.Add(x);
                                 }
+                            }
+                            catch
+                            {
+                                _logger.LogWarning("{0}: Пропускаю ордер {1} так как не смог провести с синхронизацию со Steam",
+                                    nameof(DMarketSyncManager), x.Title);
                             }
                             finally
                             {

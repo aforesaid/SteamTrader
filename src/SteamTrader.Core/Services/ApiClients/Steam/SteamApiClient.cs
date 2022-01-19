@@ -20,7 +20,7 @@ namespace SteamTrader.Core.Services.ApiClients.Steam
             _logger = logger;
         }
 
-        public async Task<ApiGetSalesForItemResponse> GetSalesForItem(string itemName, string gameId)
+        public async Task<ApiGetSalesForItemResponse> GetSalesForItem(string itemName, string gameId, int retryCount = 5)
         {
             var currentProxy = await _steamProxyBalancer.GetFreeProxy();
 
@@ -29,22 +29,37 @@ namespace SteamTrader.Core.Services.ApiClients.Steam
 
             try
             {
-                var response = await currentProxy.HttpClient.GetAsync(uri);
-
-                if (response.StatusCode is HttpStatusCode.TooManyRequests)
+                var currentRetryCount = 0;
+                do
                 {
-                    currentProxy.Lock();
+                    try
+                    {
+                        var response = await currentProxy.HttpClient.GetAsync(uri);
 
-                    return await GetSalesForItem(itemName, gameId);
-                }
+                        if (response.StatusCode is HttpStatusCode.TooManyRequests)
+                        {
+                            currentProxy.Lock();
+                            return await GetSalesForItem(itemName, gameId);
+                        }
 
-                if (!response.IsSuccessStatusCode)
-                    return null;
+                        if (!response.IsSuccessStatusCode)
+                            return null;
+                        
+                        var responseString = await response.Content.ReadAsStringAsync();
+                        var result = JsonConvert.DeserializeObject<ApiGetSalesForItemResponse>(responseString);
+                        return result;
+                    }
+                    catch (Exception)
+                    {
+                        await Task.Delay(500);
+                        currentRetryCount++;
 
-                var responseString = await response.Content.ReadAsStringAsync();
-                
-                var result = JsonConvert.DeserializeObject<ApiGetSalesForItemResponse>(responseString);
-                return result;
+                        if (retryCount > currentRetryCount)
+                            throw;
+                    }
+                } while (currentRetryCount < retryCount);
+
+                return null;
             }
             catch (TaskCanceledException)
             {
@@ -59,8 +74,8 @@ namespace SteamTrader.Core.Services.ApiClients.Steam
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "{0}: Не удалось обработать получение данных из Steam, запрос {@1}",
-                    nameof(SteamApiClient), uri);
+                _logger.LogError(e, "{0}: Не удалось обработать получение данных из Steam, запрос {@1}, ProxyId: {2}",
+                    nameof(SteamApiClient), uri, currentProxy.ProxyId);
                 throw;
             }
             finally
