@@ -20,10 +20,12 @@ namespace SteamTrader.Core.Services.ApiClients.Steam
             _logger = logger;
         }
 
-        public async Task<ApiGetSalesForItemResponse> GetSalesForItem(string itemName)
+        public async Task<ApiGetSalesForItemResponse> GetSalesForItem(string itemName, string gameId)
         {
             var currentProxy = await _proxyBalancer.GetFreeProxy();
-            var uri = GetSalesForItemUri(itemName);
+
+            var appId = GetAppIdByGameId(gameId);
+            var uri = GetSalesForItemUri(itemName, appId);
 
             try
             {
@@ -34,7 +36,7 @@ namespace SteamTrader.Core.Services.ApiClients.Steam
                     currentProxy.Lock();
 
                     await Task.Yield();
-                    return await GetSalesForItem(itemName);
+                    return await GetSalesForItem(itemName, gameId);
                 }
 
                 if (!response.IsSuccessStatusCode)
@@ -53,7 +55,7 @@ namespace SteamTrader.Core.Services.ApiClients.Steam
                 currentProxy.Lock();
 
                 await Task.Yield();
-                return await GetSalesForItem(itemName);
+                return await GetSalesForItem(itemName, gameId);
             }
             catch (NotFoundSteamFreeProxyException)
             {
@@ -71,9 +73,17 @@ namespace SteamTrader.Core.Services.ApiClients.Steam
             }
         }
 
-        public static string GetSalesForItemUri(string itemName)
-            => "https://steamcommunity.com/market/priceoverview/?country=RU&currency=USD&appid=730&market_hash_name=" + HttpUtility.UrlEncode(itemName);
+        public static string GetSalesForItemUri(string itemName, string appId)
+            => $"https://steamcommunity.com/market/priceoverview/?country=RU&currency=USD&appid={appId}&market_hash_name=" + HttpUtility.UrlEncode(itemName);
 
+        public static string GetAppIdByGameId(string gameId)
+            => gameId switch
+            {
+                "a8db" => "730",
+                "9a92" => "570",
+                "tf2" => "440",
+                _ => throw new ArgumentOutOfRangeException(nameof(gameId), gameId, null)
+            };
         public void Dispose()
         {
             _proxyBalancer?.Dispose();

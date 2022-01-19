@@ -15,6 +15,8 @@ namespace SteamTrader.Core.Services.Sync.DMarket
 {
     public class DMarketSyncManager
     {
+        public bool IsSyncingNow { get; private set; }
+        
         private readonly ILogger<DMarketSyncManager> _logger;
         private readonly IDMarketApiClient _dMarketApiClient;
         private readonly ISteamApiClient _steamApiClient;
@@ -36,8 +38,10 @@ namespace SteamTrader.Core.Services.Sync.DMarket
             _proxyBalancer = proxyBalancer;
         }
 
-        public async Task Sync(int limit = 100)
+        public async Task Sync()
         {
+            IsSyncingNow = true;
+
             try
             {
                 if (_proxyBalancer.GetCountUnlockedProxy() * 2 < _proxyBalancer.ProxyList.Count())
@@ -46,56 +50,62 @@ namespace SteamTrader.Core.Services.Sync.DMarket
                         nameof(DMarketSyncManager));
                     return;
                 }
+
                 var syncTime = DateTime.Now;
                 foreach (var gameId in _settings.DMarketSettings.BuyGameIds)
                 {
-                    var maxLimit = limit;
-                    
-                    _logger.LogInformation("{0}: По игре {1} начинаю синхронизацию последних {2} ордеров",
-                        nameof(DMarketSyncManager), gameId, maxLimit);
-                    _logger.BeginScope("Сихронизация по игре {0}, количество элементов {1}",
-                        gameId, maxLimit);
-                    
+                    _logger.LogInformation("{0}: По игре {1} начинаю синхронизацию последних ордеров от даты {2}",
+                        nameof(DMarketSyncManager), gameId, _lastSyncTime);
+                    _logger.BeginScope("Сихронизация по игре {0} от даты {1}",
+                        gameId, _lastSyncTime);
+
+                    var maxCreatedAtUnix = long.MaxValue;
                     ApiGetOffersResponse response;
                     string cursor = null;
+
+                    const int maxCountItemsForOneSync = 500;
+                    var currentCountItems = 0;
                     
                     do
                     {
                         response = await _dMarketApiClient.GetMarketplaceItems(gameId, cursor);
                         if (response?.Objects == null)
                             break;
+                        currentCountItems += response.Objects.Length;
                         
                         cursor = response.Cursor;
-                        maxLimit -= response.Objects.Length;
-                        
-                        _logger.LogInformation("{0}: Количество новых ордеров на одной странице {1}, начинаю их обработку",
-                            nameof(DMarketSyncManager), response.Objects.Length);
-                        
+
+                        maxCreatedAtUnix = Math.Min(maxCreatedAtUnix, response.Objects.Max(x => x.CreatedAt));
                         var filteringItems =
                             response.Objects.Where(x => x.Extra.TradeLock <= _settings.DMarketSettings.MaxTradeBan);
 
                         if (_lastSyncTime.HasValue)
                         {
-                            filteringItems = filteringItems.Where(x => x.CreatedAt > _lastSyncTime.Value.Ticks);
+                            var unixTimeLastUpdated = new DateTimeOffset(_lastSyncTime.Value).ToUnixTimeSeconds();
+                            filteringItems = filteringItems.Where(x => x.CreatedAt > unixTimeLastUpdated);
                         }
-                        
+
                         _logger.LogInformation("{0}: Количество предварительно подходящих ордеров составляет {1}",
                             nameof(DMarketSyncManager), filteringItems.Count());
 
                         var resultItems = new List<ApiGetOffersItem>();
-                        using var semaphoreSlim = new SemaphoreSlim(10);
-                        
+                        using var semaphoreSlim = new SemaphoreSlim(_proxyBalancer.GetCountUnlockedProxy());
+
                         var tasks = filteringItems.Select(async x =>
                         {
                             await semaphoreSlim.WaitAsync();
                             try
                             {
                                 var sellPrice = decimal.Parse(x.Price.Usd) / 100;
-                                var steamDetails = await _steamApiClient.GetSalesForItem(x.Title);
+                                var steamDetails = await _steamApiClient.GetSalesForItem(x.Title, gameId);
                                 const int minVolume = 2;
 
-                                if (!steamDetails.Success || !(steamDetails.VolumeValue > minVolume) ||
-                                    !steamDetails.LowestPriceValue.HasValue)
+                                if (steamDetails is not
+                                {
+                                    Success: true,
+                                    VolumeValue: > minVolume,
+                                    LowestPriceValue: { }
+                                })
                                     return;
 
                                 var minPrice = Math.Min(steamDetails.LowestPriceValue ?? 0,
@@ -117,11 +127,17 @@ namespace SteamTrader.Core.Services.Sync.DMarket
                                 semaphoreSlim.Release();
                             }
                         });
-                        
+
                         await Task.WhenAll(tasks);
                         _logger.LogInformation("{0}: Завершаю синхронизацию страницы по игре {1}",
                             nameof(DMarketSyncManager), gameId);
-                    } while (response.Objects.Length > 0 && cursor != null && maxLimit > 0);
+                    } while (maxCountItemsForOneSync > currentCountItems && 
+                             response.Objects.Length > 0 && 
+                             cursor != null && 
+                             (_lastSyncTime.HasValue && maxCreatedAtUnix > new DateTimeOffset(_lastSyncTime.Value).ToUnixTimeSeconds() || !_lastSyncTime.HasValue));
+                    
+                    _logger.LogInformation("{0}: По игре {1} завершена синхронизация ордеров от даты {2}",
+                        nameof(DMarketSyncManager), gameId, _lastSyncTime);
                 }
 
                 _lastSyncTime = syncTime;
@@ -130,6 +146,10 @@ namespace SteamTrader.Core.Services.Sync.DMarket
             {
                 _logger.LogWarning("{0}: По причине заблокированных всех прокси синхронизация останавливается",
                     nameof(DMarketSyncManager));
+            }
+            finally
+            {
+                IsSyncingNow = false;
             }
         }
     }

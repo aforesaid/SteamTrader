@@ -5,6 +5,6 @@ namespace SteamTrader.Core.Services.ApiClients.Steam
 {
     public interface ISteamApiClient
     {
-        Task<ApiGetSalesForItemResponse> GetSalesForItem(string itemName);
+        Task<ApiGetSalesForItemResponse> GetSalesForItem(string itemName, string gameId);
     }
 }

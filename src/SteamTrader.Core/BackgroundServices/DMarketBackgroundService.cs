@@ -34,7 +34,13 @@ namespace SteamTrader.Core.BackgroundServices
         {
             try
             { 
-                await _dMarketSyncManager.Sync();
+                if (!_dMarketSyncManager.IsSyncingNow)
+                    await _dMarketSyncManager.Sync();
+                else
+                {
+                    _logger.LogWarning("{0}: Синхронизация пропущена, так как сервис занят",
+                        nameof(DMarketBackgroundService));
+                }
             }
             catch (Exception e)
             {
