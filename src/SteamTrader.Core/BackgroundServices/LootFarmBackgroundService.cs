@@ -3,21 +3,21 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using SteamTrader.Core.Services.Sync.DMarket;
+using SteamTrader.Core.Services.Sync.LootFarm;
 
 namespace SteamTrader.Core.BackgroundServices
 {
-    public class DMarketBackgroundService : IHostedService, IDisposable
+    public class LootFarmBackgroundService : IHostedService, IDisposable
     {
-        private readonly ILogger<DMarketBackgroundService> _logger;
-        private readonly DMarketSyncManager _dMarketSyncManager;
+        private readonly ILogger<LootFarmBackgroundService> _logger;
+        private readonly LootFarmSyncManager _lootFarmSyncManager;
         private Timer _timer = null!;
 
-        public DMarketBackgroundService(ILogger<DMarketBackgroundService> logger, 
-            DMarketSyncManager dMarketSyncManager)
+        public LootFarmBackgroundService(ILogger<LootFarmBackgroundService> logger, 
+            LootFarmSyncManager lootFarmSyncManager)
         {
             _logger = logger;
-            _dMarketSyncManager = dMarketSyncManager;
+            _lootFarmSyncManager = lootFarmSyncManager;
         }
 
         public Task StartAsync(CancellationToken stoppingToken)
@@ -25,7 +25,7 @@ namespace SteamTrader.Core.BackgroundServices
             _logger.LogInformation("{0} service running", nameof(DMarketBackgroundService));
 
             _timer = new Timer(DoWork, null, TimeSpan.Zero, 
-                 TimeSpan.FromMinutes(1));
+                TimeSpan.FromHours(1));
 
             return Task.CompletedTask;
         }
@@ -34,7 +34,7 @@ namespace SteamTrader.Core.BackgroundServices
         {
             try
             {
-                //await _dMarketSyncManager.Sync();
+                await _lootFarmSyncManager.SyncForBuyFromLootFarmToSaleOnDMarket();
             }
             catch (Exception e)
             {

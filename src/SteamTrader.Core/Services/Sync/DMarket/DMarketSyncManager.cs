@@ -7,7 +7,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using SteamTrader.Core.Configuration;
 using SteamTrader.Core.Services.ApiClients.DMarket;
-using SteamTrader.Core.Services.ApiClients.DMarket.Requests;
 using SteamTrader.Core.Services.ApiClients.DMarket.Requests.GetItems;
 using SteamTrader.Core.Services.ApiClients.Steam;
 using SteamTrader.Core.Services.Proxy;
@@ -21,7 +20,7 @@ namespace SteamTrader.Core.Services.Sync.DMarket
         private readonly ILogger<DMarketSyncManager> _logger;
         private readonly IDMarketApiClient _dMarketApiClient;
         private readonly ISteamApiClient _steamApiClient;
-        private readonly SteamProxyBalancer _steamProxyBalancer;
+        private readonly ProxyBalancer _proxyBalancer;
         private readonly Settings _settings;
         
         private DateTime? _lastSyncTime;
@@ -30,17 +29,24 @@ namespace SteamTrader.Core.Services.Sync.DMarket
             ISteamApiClient steamApiClient,
             IOptions<Settings> settings,
             ILogger<DMarketSyncManager> logger,
-            SteamProxyBalancer steamProxyBalancer)
+            ProxyBalancer proxyBalancer)
         {
             _dMarketApiClient = dMarketApiClient;
             _steamApiClient = steamApiClient;
             _settings = settings.Value;
             _logger = logger;
-            _steamProxyBalancer = steamProxyBalancer;
+            _proxyBalancer = proxyBalancer;
         }
 
         public async Task Sync(bool enabledBalanceFilter = false)
         {
+            if (IsSyncingNow)
+            {
+                _logger.LogWarning("{0}: Синхронизация пропущена, так как сервис занят",
+                    nameof(DMarketSyncManager));
+                return;
+            }
+            
             IsSyncingNow = true;
 
             try
@@ -94,7 +100,7 @@ namespace SteamTrader.Core.Services.Sync.DMarket
                             nameof(DMarketSyncManager), filteringItems.Count(), currentPage);
 
                         var resultItems = new List<ApiGetOffersItem>();
-                        using var semaphoreSlim = new SemaphoreSlim(_steamProxyBalancer.GetCountUnlockedProxy());
+                        using var semaphoreSlim = new SemaphoreSlim(_proxyBalancer.GetCountUnlockedProxy(ProxyBalancer.SteamProxyKey));
 
                         var tasks = filteringItems.Select(async x =>
                         {

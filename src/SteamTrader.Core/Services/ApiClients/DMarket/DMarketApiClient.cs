@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
@@ -9,42 +10,106 @@ using SteamTrader.Core.Configuration;
 using SteamTrader.Core.Helpers;
 using SteamTrader.Core.Services.ApiClients.DMarket.Requests.GetBalance;
 using SteamTrader.Core.Services.ApiClients.DMarket.Requests.GetItems;
+using SteamTrader.Core.Services.ApiClients.DMarket.Requests.GetLastSales;
+using SteamTrader.Core.Services.Proxy;
 
 namespace SteamTrader.Core.Services.ApiClients.DMarket
 {
     public class DMarketApiClient : IDMarketApiClient, IDisposable
     {
-        private readonly HttpClient _httpClient;
         private readonly DMarketSettings _dMarketSettings;
+        private readonly ProxyBalancer _proxyBalancer;
 
-        public DMarketApiClient(IOptions<Settings> settings)
+        public DMarketApiClient(IOptions<Settings> settings, ProxyBalancer proxyBalancer)
         {
+            _proxyBalancer = proxyBalancer;
             _dMarketSettings = settings.Value.DMarketSettings;
-            _httpClient = new HttpClient();
         }
 
         public async Task<ApiGetOffersResponse> GetMarketplaceItems(string gameId, decimal balance, string cursor = null)
         {
-            var uri = DMarketEndpoints.BaseUrl + DMarketEndpoints.GetMarketplaceItemsUri(gameId, balance, cursor);
+            var proxy = await _proxyBalancer.GetFreeProxy(ProxyBalancer.DMarketProxyKey);
 
-            var response = await _httpClient.GetAsync(uri);
-            
-            var responseString = await response.Content.ReadAsStringAsync();
+            try
+            {
+                var uri = DMarketEndpoints.BaseUrl + DMarketEndpoints.GetMarketplaceItemsUri(gameId, balance, cursor);
+                var response = await proxy.HttpClient.GetAsync(uri);
+                var responseString = await response.Content.ReadAsStringAsync();
 
-            var result = JsonConvert.DeserializeObject<ApiGetOffersResponse>(responseString);
-            return result;
+                var result = JsonConvert.DeserializeObject<ApiGetOffersResponse>(responseString);
+                return result;
+            }
+            finally
+            {
+                proxy.SetUnreserved(ProxyBalancer.DMarketProxyKey);
+            }
         }
 
         public async Task<ApiGetBalanceResponse> GetBalance()
         {
-            var uri = DMarketEndpoints.GetBalance;
+            var proxy = await _proxyBalancer.GetFreeProxy(ProxyBalancer.DMarketProxyKey);
+            try
+            {
+                var uri = DMarketEndpoints.GetBalance;
 
-            var requestMessage = CreateRequestMessage<string>(uri, HttpMethod.Get, false);
-            var response = await _httpClient.SendAsync(requestMessage);
-            var responseString = await response.Content.ReadAsStringAsync();
+                var requestMessage = CreateRequestMessage<string>(uri, HttpMethod.Get, false);
+                var response = await proxy.HttpClient.SendAsync(requestMessage);
+                var responseString = await response.Content.ReadAsStringAsync();
 
-            var result = JsonConvert.DeserializeObject<ApiGetBalanceResponse>(responseString);
-            return result;
+                var result = JsonConvert.DeserializeObject<ApiGetBalanceResponse>(responseString);
+                return result;
+            }
+            finally
+            {
+                proxy.SetUnreserved(ProxyBalancer.DMarketProxyKey);
+            }
+        }
+
+        public async Task<ApiGetLastSalesResponse> GetLastSales(string gameId, string name, int retryCount = 5)
+        {
+            var proxy = await _proxyBalancer.GetFreeProxy(ProxyBalancer.DMarketProxyKey);
+
+            try
+            {
+                var uri = DMarketEndpoints.BaseUrl + DMarketEndpoints.GetLastSalesHistory(gameId, name);
+
+                var currentRetryCount = 0;
+                
+                do
+                {
+                    try
+                    {
+                        var response = await proxy.HttpClient.GetAsync(uri);
+
+                        if (response.StatusCode is HttpStatusCode.TooManyRequests)
+                        {
+                            proxy.Lock(ProxyBalancer.DMarketProxyKey);
+                            return await GetLastSales(gameId, name);
+                        }
+
+                        if (!response.IsSuccessStatusCode)
+                            return null;
+                            
+                        var responseString = await response.Content.ReadAsStringAsync();
+                        var result = JsonConvert.DeserializeObject<ApiGetLastSalesResponse>(responseString);
+                       
+                        return result;
+                    }
+                    catch (Exception)
+                    {
+                        await Task.Delay(3000);
+                        currentRetryCount++;
+
+                        if (retryCount < currentRetryCount)
+                            throw;
+                    }
+                } while (currentRetryCount < retryCount);
+                return null;
+            }
+            finally
+            {
+                proxy.SetUnreserved(ProxyBalancer.DMarketProxyKey);
+            }
         }
 
         private HttpRequestMessage CreateRequestMessage<TRequest>(string uri, HttpMethod method, bool hasBody, TRequest request = default)
@@ -81,7 +146,7 @@ namespace SteamTrader.Core.Services.ApiClients.DMarket
         
         public void Dispose()
         {
-            _httpClient?.Dispose();
+            _proxyBalancer?.Dispose();
         }
     }
 }

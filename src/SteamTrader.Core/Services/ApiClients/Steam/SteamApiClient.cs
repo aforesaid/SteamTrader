@@ -11,18 +11,18 @@ namespace SteamTrader.Core.Services.ApiClients.Steam
 {
     public class SteamApiClient : ISteamApiClient, IDisposable
     {
-        private readonly SteamProxyBalancer _steamProxyBalancer;
+        private readonly ProxyBalancer _proxyBalancer;
         private readonly ILogger<SteamApiClient> _logger;
-        public SteamApiClient(SteamProxyBalancer steamProxyBalancer, 
+        public SteamApiClient(ProxyBalancer proxyBalancer, 
             ILogger<SteamApiClient> logger)
         {
-            _steamProxyBalancer = steamProxyBalancer;
+            _proxyBalancer = proxyBalancer;
             _logger = logger;
         }
 
         public async Task<ApiGetSalesForItemResponse> GetSalesForItem(string itemName, string gameId, int retryCount = 5)
         {
-            var currentProxy = await _steamProxyBalancer.GetFreeProxy();
+            var currentProxy = await _proxyBalancer.GetFreeProxy(ProxyBalancer.SteamProxyKey);
 
             var appId = GetAppIdByGameId(gameId);
             var uri = GetSalesForItemUri(itemName, appId);
@@ -38,7 +38,7 @@ namespace SteamTrader.Core.Services.ApiClients.Steam
 
                         if (response.StatusCode is HttpStatusCode.TooManyRequests)
                         {
-                            currentProxy.Lock();
+                            currentProxy.Lock(ProxyBalancer.SteamProxyKey);
                             return await GetSalesForItem(itemName, gameId);
                         }
 
@@ -54,7 +54,7 @@ namespace SteamTrader.Core.Services.ApiClients.Steam
                         await Task.Delay(3000);
                         currentRetryCount++;
 
-                        if (retryCount > currentRetryCount)
+                        if (retryCount < currentRetryCount)
                             throw;
                     }
                 } while (currentRetryCount < retryCount);
@@ -63,7 +63,7 @@ namespace SteamTrader.Core.Services.ApiClients.Steam
             }
             catch (TaskCanceledException)
             {
-                currentProxy.Lock();
+                currentProxy.Lock(ProxyBalancer.SteamProxyKey);
 
                 await Task.Yield();
                 return await GetSalesForItem(itemName, gameId);
@@ -80,7 +80,7 @@ namespace SteamTrader.Core.Services.ApiClients.Steam
             }
             finally
             {
-                currentProxy.SetUnReserved();
+                currentProxy.SetUnreserved(ProxyBalancer.SteamProxyKey);
             }
         }
 
@@ -97,7 +97,7 @@ namespace SteamTrader.Core.Services.ApiClients.Steam
             };
         public void Dispose()
         {
-            _steamProxyBalancer?.Dispose();
+            _proxyBalancer?.Dispose();
         }
     }
 }
