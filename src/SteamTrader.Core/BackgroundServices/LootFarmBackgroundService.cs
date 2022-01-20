@@ -22,7 +22,7 @@ namespace SteamTrader.Core.BackgroundServices
 
         public Task StartAsync(CancellationToken stoppingToken)
         {
-            _logger.LogInformation("{0} service running", nameof(DMarketBackgroundService));
+            _logger.LogInformation("{0} service running", nameof(DMarketToSteamBackgroundService));
 
             _timer = new Timer(DoWork, null, TimeSpan.Zero, 
                 TimeSpan.FromHours(1));
@@ -45,7 +45,7 @@ namespace SteamTrader.Core.BackgroundServices
         public Task StopAsync(CancellationToken stoppingToken)
         {
             _logger.LogInformation("{0} is stopping",
-                nameof(DMarketBackgroundService));
+                nameof(DMarketToSteamBackgroundService));
 
             _timer?.Change(Timeout.Infinite, 0);
 

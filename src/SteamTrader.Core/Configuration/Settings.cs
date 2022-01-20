@@ -23,7 +23,9 @@ namespace SteamTrader.Core.Configuration
         public string PrivateKey { get; set; }
         public long MaxTradeBan { get; set; }
         public string[] BuyGameIds { get; set; }
-        public double SaleCommissionPercent { get; set; }
+        public string[] SaleGameIds { get; set; }
+
+        public decimal SaleCommissionPercent { get; set; }
         public int NeededQtySalesForTwoDays { get; set; }
     }
 
@@ -37,7 +39,7 @@ namespace SteamTrader.Core.Configuration
     public class LootFarmSettings
     {
         public string[] LootFarmToDMarketSyncingGames { get; set; }
-        public double SaleCommissionPercent { get; set; }
-        public double TargetMarginPercentForSaleOnDMarket { get; set; }
+        public decimal SaleCommissionPercent { get; set; }
+        public decimal TargetMarginPercentForSaleOnDMarket { get; set; }
     }
 }

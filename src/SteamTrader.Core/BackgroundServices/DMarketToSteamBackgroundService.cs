@@ -7,22 +7,22 @@ using SteamTrader.Core.Services.Sync.DMarket;
 
 namespace SteamTrader.Core.BackgroundServices
 {
-    public class DMarketBackgroundService : IHostedService, IDisposable
+    public class DMarketToSteamBackgroundService : IHostedService, IDisposable
     {
-        private readonly ILogger<DMarketBackgroundService> _logger;
-        private readonly DMarketSyncManager _dMarketSyncManager;
+        private readonly ILogger<DMarketToSteamBackgroundService> _logger;
+        private readonly DMarketToSteamSyncManager _dMarketToSteamSyncManager;
         private Timer _timer = null!;
 
-        public DMarketBackgroundService(ILogger<DMarketBackgroundService> logger, 
-            DMarketSyncManager dMarketSyncManager)
+        public DMarketToSteamBackgroundService(ILogger<DMarketToSteamBackgroundService> logger, 
+            DMarketToSteamSyncManager dMarketToSteamSyncManager)
         {
             _logger = logger;
-            _dMarketSyncManager = dMarketSyncManager;
+            _dMarketToSteamSyncManager = dMarketToSteamSyncManager;
         }
 
         public Task StartAsync(CancellationToken stoppingToken)
         {
-            _logger.LogInformation("{0} service running", nameof(DMarketBackgroundService));
+            _logger.LogInformation("{0} service running", nameof(DMarketToSteamBackgroundService));
 
             _timer = new Timer(DoWork, null, TimeSpan.Zero, 
                  TimeSpan.FromMinutes(1));
@@ -34,7 +34,7 @@ namespace SteamTrader.Core.BackgroundServices
         {
             try
             {
-                //await _dMarketSyncManager.Sync();
+                await _dMarketToSteamSyncManager.Sync();
             }
             catch (Exception e)
             {
@@ -45,7 +45,7 @@ namespace SteamTrader.Core.BackgroundServices
         public Task StopAsync(CancellationToken stoppingToken)
         {
             _logger.LogInformation("{0} is stopping",
-                nameof(DMarketBackgroundService));
+                nameof(DMarketToSteamBackgroundService));
 
             _timer?.Change(Timeout.Infinite, 0);
 

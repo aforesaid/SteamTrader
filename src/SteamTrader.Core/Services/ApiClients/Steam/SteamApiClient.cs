@@ -93,6 +93,7 @@ namespace SteamTrader.Core.Services.ApiClients.Steam
                 "a8db" => "730",
                 "9a92" => "570",
                 "tf2" => "440",
+                "rust" => "252490",
                 _ => throw new ArgumentOutOfRangeException(nameof(gameId), gameId, null)
             };
         public void Dispose()
