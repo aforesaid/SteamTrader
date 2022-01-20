@@ -94,7 +94,7 @@ namespace SteamTrader.Core.Services.Sync.DMarket
                             nameof(DMarketSyncManager), filteringItems.Count(), currentPage);
 
                         var resultItems = new List<ApiGetOffersItem>();
-                        using var semaphoreSlim = new SemaphoreSlim(_steamProxyBalancer.GetCountUnlockedProxy());
+                        using var semaphoreSlim = new SemaphoreSlim(10);
 
                         var tasks = filteringItems.Select(async x =>
                         {
