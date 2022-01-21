@@ -61,10 +61,11 @@ namespace SteamTrader.Core.Services.Proxy
                 if (notCreatedProxyKeyDetailsForProxy != null)
                 {
                     var proxyKeyDetails = new ProxyKeyDetails(key, _settings.ProxyLockTime[key]);
-                    
+                    proxyKeyDetails.SetReserved();
+
                     notCreatedProxyKeyDetailsForProxy.ProxyKeyDetailsList.Add(proxyKeyDetails);
                     proxy = notCreatedProxyKeyDetailsForProxy;
-                    
+
                     break;
                 }
 

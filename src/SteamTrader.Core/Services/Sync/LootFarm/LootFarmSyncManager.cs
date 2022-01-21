@@ -45,7 +45,18 @@ namespace SteamTrader.Core.Services.Sync.LootFarm
             {
                 foreach (var gameName in _settings.LootFarmSettings.LootFarmToDMarketSyncingGames)
                 {
-                    _logger.LogInformation("{0}: Начинаю синхронизацию по выводу из LootFarm-a на DMarket, игра {1}",
+                    await HandleGame(gameName);
+                }
+            }
+            finally
+            {
+                IsSyncingNow = false;
+            }
+        }
+
+        private async Task HandleGame(string gameName)
+        {
+            _logger.LogInformation("{0}: Начинаю синхронизацию по выводу из LootFarm-a на DMarket, игра {1}",
                         nameof(LootFarmSyncManager), gameName);
                     _logger.BeginScope("{0}: Начинаю синхронизацию по игре {1}",
                         nameof(LootFarmSyncManager), gameName);
@@ -76,7 +87,6 @@ namespace SteamTrader.Core.Services.Sync.LootFarm
                             if (countLastSales >= _settings.DMarketSettings.NeededQtySalesForTwoDays)
                             {
                                 var middleSalePrice = (long) dMarketDetails.LastSales
-                                    .Take(_settings.DMarketSettings.NeededQtySalesForTwoDays)
                                     .Average(i => i.Price.Amount);
                                 var lastSalePrice = dMarketDetails.LastSales.First().Price.Amount;
 
@@ -115,13 +125,6 @@ namespace SteamTrader.Core.Services.Sync.LootFarm
                     await Task.WhenAll(tasks);
                     _logger.LogInformation("{0}: Синхронизация айтемов с DMarket-ом по игре {1} завершена",
                         nameof(LootFarmSyncManager), gameName);
-
-                }
-            }
-            finally
-            {
-                IsSyncingNow = false;
-            }
         }
     }
 }
