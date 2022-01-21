@@ -18,7 +18,7 @@ namespace SteamTrader.API
 
             try
             {
-                Log.Information(К"Starting");
+                Log.Information("Starting");
                 
                 CreateHostBuilder(args, Log.Logger).Build().Run();
             }
