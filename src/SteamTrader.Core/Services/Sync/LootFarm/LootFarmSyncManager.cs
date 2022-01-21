@@ -81,6 +81,10 @@ namespace SteamTrader.Core.Services.Sync.LootFarm
                         try
                         {
                             var dMarketDetails = await _dMarketApiClient.GetLastSales(gameName, x.Name);
+                            
+                            if (dMarketDetails == null)
+                                return;
+                            
                             var countLastSales = dMarketDetails.LastSales
                                 .Count(i => DateTimeOffset.FromUnixTimeSeconds(i.Date) > DateTime.Today.AddDays(-2));
 
