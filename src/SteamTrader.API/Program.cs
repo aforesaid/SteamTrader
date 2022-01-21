@@ -12,13 +12,13 @@ namespace SteamTrader.API
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Override("Microsoft", Serilog.Events.LogEventLevel.Warning)
                 .WriteTo.Console()
-                //.WriteTo.Seq($"http://{Environment.GetEnvironmentVariable("SEQ")}:5341", Serilog.Events.LogEventLevel.Information)
+                .WriteTo.Seq($"http://{Environment.GetEnvironmentVariable("SEQ")}:5341", Serilog.Events.LogEventLevel.Information)
                 .Enrich.WithProperty("APP", "API")
                 .CreateLogger();
 
             try
             {
-                Log.Information("Starting");
+                Log.Information(К"Starting");
                 
                 CreateHostBuilder(args, Log.Logger).Build().Run();
             }
