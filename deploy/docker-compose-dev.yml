@@ -6,10 +6,22 @@ services:
         depends_on:
             - postgres
             - seq
-        environment:
-          - SEQ=dev_seq
         networks:
           - backend
+          - traefik-public
+        deploy:
+          labels:
+            - traefik.enable=true
+            - traefik.docker.network=traefik-public
+            - traefik.constraint-label=traefik-public
+            - traefik.http.routers.dev_api-http.rule=Host(dev.api.`${DOMAIN?Variable not set}`)
+            - traefik.http.routers.dev_api-http.entrypoints=http
+            - traefik.http.routers.dev_api-http.middlewares=https-redirect
+            - traefik.http.routers.dev_api-https.rule=Host(dev.api.`${DOMAIN?Variable not set}`)
+            - traefik.http.routers.dev_api-https.entrypoints=https
+            - traefik.http.routers.dev_api-https.tls=true
+            - traefik.http.routers.dev_api-https.tls.certresolver=le
+            - traefik.http.services.dev_api.loadbalancer.server.port=80
     postgres:
         image: postgres:13-alpine
         environment:
@@ -26,10 +38,10 @@ services:
             - traefik.enable=true
             - traefik.docker.network=traefik-public
             - traefik.constraint-label=traefik-public
-            - traefik.http.routers.dev_seq-http.rule=Host(`${DOMAIN?Variable not set}`)
+            - traefik.http.routers.dev_seq-http.rule=Host(dev.log.`${DOMAIN?Variable not set}`)
             - traefik.http.routers.dev_seq-http.entrypoints=http
             - traefik.http.routers.dev_seq-http.middlewares=https-redirect
-            - traefik.http.routers.dev_seq-https.rule=Host(`${DOMAIN?Variable not set}`)
+            - traefik.http.routers.dev_seq-https.rule=Host(dev.log.`${DOMAIN?Variable not set}`)
             - traefik.http.routers.dev_seq-https.entrypoints=https
             - traefik.http.routers.dev_seq-https.tls=true
             - traefik.http.routers.dev_seq-https.tls.certresolver=le
