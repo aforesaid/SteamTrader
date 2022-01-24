@@ -15,7 +15,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SteamTrader.IntegrationTest
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SteamTrader.Domain", "SteamTrader.Domain\SteamTrader.Domain.csproj", "{CED20E58-448C-4B56-B0DB-EB1CBD8FF15A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SteamTrader.Infrastructure", "SteamTrader.Infrastructure\SteamTrader.Infrastructure.csproj", "{3E8734F4-C10D-4189-B0CB-699A44CF59E3}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SteamTrader.Infrastructure.Data", "SteamTrader.Infrastructure.Data\SteamTrader.Infrastructure.Data.csproj", "{3E8734F4-C10D-4189-B0CB-699A44CF59E3}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SteamTrader.Source", "SteamTrader.Source\SteamTrader.Source.csproj", "{0ADCC546-FE5F-4184-AC05-163B89EECCDF}"
 EndProject

@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using SteamTrader.Core.BackgroundServices;
+using SteamTrader.Core.Services;
 using SteamTrader.Core.Services.ApiClients.AntiCaptca;
 using SteamTrader.Core.Services.ApiClients.DMarket;
 using SteamTrader.Core.Services.ApiClients.LootFarm;
@@ -18,7 +19,9 @@ namespace SteamTrader.API.Extensions
             services.AddSingleton<IDMarketApiClient, DMarketApiClient>();
             services.AddSingleton<ISteamApiClient, SteamApiClient>();
             services.AddSingleton<ILootFarmApiClient, LootFarmApiClient>();
-
+            
+            services.AddScoped<TradeOffersService>();
+            
             services.AddSingleton<ProxyBalancer>();
             services.AddSingleton<DMarketToSteamSyncManager>();
             services.AddSingleton<LootFarmSyncManager>();

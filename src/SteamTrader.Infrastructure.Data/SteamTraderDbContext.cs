@@ -2,17 +2,25 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using SteamTrader.Domain.Entities;
 using SteamTrader.Domain.Repository;
 
-namespace SteamTrader.Infrastructure
+namespace SteamTrader.Infrastructure.Data
 {
-    public class SteamTraderDbContext : DbContext, ISteamTraderRepo, IUnitOfWork
+    public class SteamTraderDbContext : DbContext, IUnitOfWork
     {
+        public DbSet<TradeOfferEntity> TradeOffers { get; protected set; }
         public SteamTraderDbContext() : base() { }
         public SteamTraderDbContext(DbContextOptions options) : base(options) { }
         
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.Entity<TradeOfferEntity>().HasKey(x => x.Id);
+            modelBuilder.Entity<TradeOfferEntity>().HasIndex(x => x.DateTime);
+            modelBuilder.Entity<TradeOfferEntity>().HasIndex(x => x.From);
+            modelBuilder.Entity<TradeOfferEntity>().HasIndex(x => x.To);
+            modelBuilder.Entity<TradeOfferEntity>().HasIndex(x => x.Margin);
+            
             base.OnModelCreating(modelBuilder);
         }
 

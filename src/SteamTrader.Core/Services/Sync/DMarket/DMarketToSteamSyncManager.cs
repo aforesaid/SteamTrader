@@ -9,6 +9,9 @@ using SteamTrader.Core.Services.ApiClients.DMarket;
 using SteamTrader.Core.Services.ApiClients.DMarket.Requests.GetItems;
 using SteamTrader.Core.Services.ApiClients.Steam;
 using SteamTrader.Core.Services.Proxy;
+using SteamTrader.Domain.Entities;
+using SteamTrader.Domain.Enums;
+using SteamTrader.Infrastructure.Data;
 
 namespace SteamTrader.Core.Services.Sync.DMarket
 {
@@ -19,7 +22,7 @@ namespace SteamTrader.Core.Services.Sync.DMarket
         private readonly ILogger<DMarketToSteamSyncManager> _logger;
         private readonly IDMarketApiClient _dMarketApiClient;
         private readonly ISteamApiClient _steamApiClient;
-        private readonly ProxyBalancer _proxyBalancer;
+        private readonly SteamTraderDbContext _dbContext;
         private readonly Settings _settings;
         
         private DateTime? _lastSyncTime;
@@ -28,13 +31,13 @@ namespace SteamTrader.Core.Services.Sync.DMarket
             ISteamApiClient steamApiClient,
             IOptions<Settings> settings,
             ILogger<DMarketToSteamSyncManager> logger,
-            ProxyBalancer proxyBalancer)
+            SteamTraderDbContext dbContext)
         {
             _dMarketApiClient = dMarketApiClient;
             _steamApiClient = steamApiClient;
             _settings = settings.Value;
             _logger = logger;
-            _proxyBalancer = proxyBalancer;
+            _dbContext = dbContext;
         }
 
         public async Task Sync(bool enabledBalanceFilter = false)
@@ -120,7 +123,7 @@ namespace SteamTrader.Core.Services.Sync.DMarket
                                     var minSteamPrice = Math.Min(steamDetails.LowestPriceValue.Value,
                                         steamDetails.MedianPriceValue ?? 0);
                                     
-                                    HandleItemBuyInDMarketSaleInSteam(minSteamPrice, sellPrice, x.Title);
+                                    HandleItemBuyInDMarketSaleInSteam(minSteamPrice, sellPrice, x.Title, gameId);
                                 }
                             }
                             catch
@@ -159,7 +162,7 @@ namespace SteamTrader.Core.Services.Sync.DMarket
             }
         }
 
-        private void HandleItemBuyInDMarketSaleInSteam(decimal minSteamPrice, decimal sellPrice, string title)
+        private async Task HandleItemBuyInDMarketSaleInSteam(decimal minSteamPrice, decimal sellPrice, string title, string gameId)
         {
             var profit = minSteamPrice * (1 - _settings.SteamCommissionPercent / 100) -
                          sellPrice;
@@ -169,6 +172,10 @@ namespace SteamTrader.Core.Services.Sync.DMarket
                 _logger.LogWarning(
                     "Потенциальная покупка с DMarket-a и продажи в Steam-е: steamLowPrice: {0}, dmarketPrice: {1}, margin {2} title: {3}",
                     minSteamPrice, sellPrice, margin, title);
+                var newTradeOffer = new TradeOfferEntity(OfferSourceEnum.DMarket, OfferSourceEnum.Steam, sellPrice,
+                    minSteamPrice, margin, gameId, title);
+                await _dbContext.TradeOffers.AddAsync(newTradeOffer);
+                await _dbContext.SaveChangesAsync();
             }
         }
     }
