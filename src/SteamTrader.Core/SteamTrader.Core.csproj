@@ -9,13 +9,16 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Services\ApiClients" />
+    <PackageReference Include="Chaos.NaCl.Standard" Version="1.0.0" />
+    <PackageReference Include="Jering.Javascript.NodeJS" Version="6.3.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="5.0.0" />
+    <PackageReference Include="NaCl.Core" Version="2.0.2" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Chaos.NaCl.Standard" Version="1.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="5.0.0" />
-    <PackageReference Include="NaCl.Core" Version="2.0.2" />
+    <None Update="Helpers\RamblerHelper\JsBuildToken.js">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>
