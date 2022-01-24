@@ -21,7 +21,7 @@ namespace SteamTrader.API.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetTradeOffers([FromBody] int? take, [FromBody] int? skip)
+        public async Task<IActionResult> GetTradeOffers([FromQuery] int? take, [FromQuery] int? skip)
         {
             try
             {
