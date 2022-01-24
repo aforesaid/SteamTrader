@@ -8,7 +8,7 @@ using SteamTrader.Core.Services.ApiClients.Rambler;
 
 namespace SteamTrader.Core.Services.AutoReger.MailAutoReger
 {
-    public class RamblerAutoReger
+    public class RamblerAutoReger : IRamblerAutoReger
     {
         private readonly ILogger<RamblerAutoReger> _logger;
         private readonly string _antiCaptchaToken;

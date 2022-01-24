@@ -5,6 +5,7 @@ namespace SteamTrader.Core.Configuration
     public class Settings
     {
         public string AntiCaptchaToken { get; set; }
+        public MailConfiguration MailConfiguration { get; set; }
         public DMarketSettings DMarketSettings { get; set; }
         public ProxyConfigItem[] Proxies { get; set; }
         public TimeSpan ProxyLimitTime { get; set; }
@@ -28,5 +29,12 @@ namespace SteamTrader.Core.Configuration
         public int Port { get; set; }
         public string Login { get; set; }
         public string Password { get; set; }
+    }
+
+    public class MailConfiguration
+    {
+        public string Host { get; set; }
+        public int Port { get; set; }
+        public bool UseSsl { get; set; }
     }
 }
