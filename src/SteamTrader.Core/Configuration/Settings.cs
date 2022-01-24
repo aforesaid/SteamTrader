@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace SteamTrader.Core.Configuration
 {
@@ -7,12 +8,15 @@ namespace SteamTrader.Core.Configuration
         public string AntiCaptchaToken { get; set; }
         public MailConfiguration MailConfiguration { get; set; }
         public DMarketSettings DMarketSettings { get; set; }
+        public LootFarmSettings LootFarmSettings { get; set; }
         public ProxyConfigItem[] Proxies { get; set; }
         public TimeSpan ProxyLimitTime { get; set; }
         public TimeSpan HttpTimeout { get; set; }
 
         public decimal SteamCommissionPercent { get; set; }
         public decimal TargetDMarketToSteamProfitPercent { get; set; }
+        public Dictionary<string, TimeSpan> ProxyLockTime { get; set; }
+
     }
 
     public class DMarketSettings
@@ -21,6 +25,10 @@ namespace SteamTrader.Core.Configuration
         public string PrivateKey { get; set; }
         public long MaxTradeBan { get; set; }
         public string[] BuyGameIds { get; set; }
+        public string[] SaleGameIds { get; set; }
+
+        public decimal SaleCommissionPercent { get; set; }
+        public int NeededQtySalesForTwoDays { get; set; }
     }
 
     public class ProxyConfigItem
@@ -29,6 +37,12 @@ namespace SteamTrader.Core.Configuration
         public int Port { get; set; }
         public string Login { get; set; }
         public string Password { get; set; }
+    }
+    public class LootFarmSettings
+    {
+        public string[] LootFarmToDMarketSyncingGames { get; set; }
+        public decimal SaleCommissionPercent { get; set; }
+        public decimal TargetMarginPercentForSaleOnDMarket { get; set; }
     }
 
     public class MailConfiguration
