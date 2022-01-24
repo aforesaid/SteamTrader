@@ -53,10 +53,10 @@ namespace SteamTrader.Core.Services.ApiClients.Rambler.Requests.RegisterAccount
         public string Answer { get; set; }
 
         [JsonProperty("utm")]
-        public ApiRegisterAccountUtm Utm { get; set; }
+        public ApiRegisterAccountUtm Utm { get; set; } = new();
 
         [JsonProperty("via")]
-        public ApiRegisterAccountVia Via { get; set; }
+        public ApiRegisterAccountVia Via { get; set; } = new();
 
         [JsonProperty("create_session")]
         public long CreateSession { get; set; }

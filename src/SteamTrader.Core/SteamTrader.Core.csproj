@@ -6,6 +6,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\SteamTrader.Infrastructure\SteamTrader.Infrastructure.csproj" />
+    <ProjectReference Include="..\SteamTrader.Source\SteamTrader.Source.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -13,12 +14,6 @@
     <PackageReference Include="Jering.Javascript.NodeJS" Version="6.3.0" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="5.0.0" />
     <PackageReference Include="NaCl.Core" Version="2.0.2" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Update="Helpers\RamblerHelper\JsBuildToken.js">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
   </ItemGroup>
 
 </Project>

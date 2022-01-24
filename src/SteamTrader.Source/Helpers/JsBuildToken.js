@@ -10,7 +10,7 @@
         return btoa(n).replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_")
     };
     
-    var value = '{"loginAvailable":2,"newPassword":[180,2557],"confirmPassword":0,"question":-1,"answer":0,"orderType":"captcha","lastChangeToSubmit":0,"string":"ae42de4f5f0b6dd3ba5e","number":[83,99],"ctime":"' + parseInt(new Date().getTime() / 1000) + '}';
+    var value = '{"loginAvailable":2,"newPassword":[180,2557],"confirmPassword":0,"question":-1,"answer":0,"orderType":"captcha","lastChangeToSubmit":0,"string":"ae42de4f5f0b6dd3ba5e","number":[83,99],"ctime":"' + parseInt(new Date().getTime() / 1000) + '"}';
 
     let randomValues = crypto.getRandomValues(new Uint8Array(12));
     crypto.subtle.generateKey({name: "AES-GCM", length: 256}, !0, ["encrypt", "decrypt"]).then(result => {

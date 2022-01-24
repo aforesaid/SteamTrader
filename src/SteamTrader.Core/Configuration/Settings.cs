@@ -4,6 +4,7 @@ namespace SteamTrader.Core.Configuration
 {
     public class Settings
     {
+        public string AntiCaptchaToken { get; set; }
         public DMarketSettings DMarketSettings { get; set; }
         public ProxyConfigItem[] Proxies { get; set; }
         public TimeSpan ProxyLimitTime { get; set; }

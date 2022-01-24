@@ -17,6 +17,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SteamTrader.Domain", "Steam
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SteamTrader.Infrastructure", "SteamTrader.Infrastructure\SteamTrader.Infrastructure.csproj", "{3E8734F4-C10D-4189-B0CB-699A44CF59E3}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SteamTrader.Source", "SteamTrader.Source\SteamTrader.Source.csproj", "{0ADCC546-FE5F-4184-AC05-163B89EECCDF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -47,6 +49,10 @@ Global
 		{3E8734F4-C10D-4189-B0CB-699A44CF59E3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3E8734F4-C10D-4189-B0CB-699A44CF59E3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3E8734F4-C10D-4189-B0CB-699A44CF59E3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0ADCC546-FE5F-4184-AC05-163B89EECCDF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0ADCC546-FE5F-4184-AC05-163B89EECCDF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0ADCC546-FE5F-4184-AC05-163B89EECCDF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0ADCC546-FE5F-4184-AC05-163B89EECCDF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
