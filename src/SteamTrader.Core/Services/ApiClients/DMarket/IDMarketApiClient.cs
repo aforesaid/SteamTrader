@@ -8,7 +8,7 @@ namespace SteamTrader.Core.Services.ApiClients.DMarket
     public interface IDMarketApiClient
     {
         Task<ApiGetOffersResponse> GetMarketplaceItems(string gameId, decimal balance, string cursor = null, int retryCount = 5);
-        Task<ApiGetOffersResponse> GetOffersForItem(string gameId, string marketplaceName);
+        Task<ApiGetOffersResponse> GetCurrentOffers(string gameId, string marketplaceName, int retryCount = 5);
         Task<ApiGetLastSalesResponse> GetLastSales(string gameId, string name, int retryCount = 5);
         Task<ApiGetBalanceResponse> GetBalance();
     }

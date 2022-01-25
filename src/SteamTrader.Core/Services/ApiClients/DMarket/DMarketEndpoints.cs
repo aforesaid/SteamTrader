@@ -8,7 +8,7 @@ namespace SteamTrader.Core.Services.ApiClients.DMarket
 
         public static string GetBalance = "/account/v1/balance";
         
-        public static string GetOffersForItem(string gameId, decimal priceTo = 0, string cursor = "", string orderBy = "updated")
+        public static string GetMarketplaceItems(string gameId, decimal priceTo = 0, string cursor = "", string orderBy = "updated")
             => $"/exchange/v1/market/items?side=market&orderBy=updated&orderDir=desc&priceFrom=0&priceTo={priceTo}&gameId={gameId}&types=dmarket&cursor={cursor}&limit=100&currency=USD";
 
         public static string GetLastSalesHistory(string gameId, string name)

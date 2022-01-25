@@ -170,10 +170,6 @@ namespace SteamTrader.Core.Services.Sync.DMarket
             var margin = profit / sellPrice;
             if (margin > _settings.TargetDMarketToSteamProfitPercent / 100)
             {
-                _logger.LogWarning(
-                    "Потенциальная покупка с DMarket-a и продажи в Steam-е: steamLowPrice: {0}, dmarketPrice: {1}, margin {2} title: {3}",
-                    minSteamPrice, sellPrice, margin, title);
-
                 using var scope = _serviceProvider.CreateScope();
                 var dbContext = scope.ServiceProvider.GetRequiredService<SteamTraderDbContext>();
                 

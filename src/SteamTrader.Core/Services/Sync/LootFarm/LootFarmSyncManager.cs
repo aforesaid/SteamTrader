@@ -85,8 +85,6 @@ namespace SteamTrader.Core.Services.Sync.LootFarm
             
             _logger.LogInformation("{0}: Найдено айтемов на LootFarm {1}, начинаю сравнение с DMarket-ом",
                 nameof(LootFarmSyncManager), items.Length);
-
-            var countHandledItems = 0;
             
             using var semaphore = new SemaphoreSlim(10);
             var tasksToDMarket = itemsForTradeToDMarket.Select(async x =>
@@ -115,23 +113,16 @@ namespace SteamTrader.Core.Services.Sync.LootFarm
                 finally
                 {
                     semaphore.Release();
-                    
-                    countHandledItems++;
-                    
-                    if (countHandledItems % 100 == 0)
-                        _logger.LogInformation("{0}: Обработано {1} айтемов из {2}",
-                            nameof(LootFarmSyncManager), countHandledItems, items.Length);
                 }
             });
 
-            await Task.WhenAll(tasksToDMarket);
             
             var tasksToLootFarm = itemsForTradeToLootFarm.Select(async x =>
             {
                 await semaphore.WaitAsync();
                 try
                 {
-                    var offers = await _dMarketApiClient.GetOffersForItem(gameId, x.Name);
+                    var offers = await _dMarketApiClient.GetCurrentOffers(gameId, x.Name);
 
                     if (offers.Objects.Length > 0)
                     {
@@ -147,17 +138,12 @@ namespace SteamTrader.Core.Services.Sync.LootFarm
                 finally
                 {
                     semaphore.Release();
-                    
-                    countHandledItems++;
-                    
-                    if (countHandledItems % 100 == 0)
-                        _logger.LogInformation("{0}: Обработано {1} айтемов из {2}",
-                            nameof(LootFarmSyncManager), countHandledItems, items.Length);
                 }
             });
 
             await Task.WhenAll(tasksToLootFarm);
-            
+            await Task.WhenAll(tasksToDMarket);
+
             _logger.LogInformation("{0}: Синхронизация айтемов с DMarket-ом по игре {1} завершена",
                 nameof(LootFarmSyncManager), gameId);
         }
@@ -199,11 +185,6 @@ namespace SteamTrader.Core.Services.Sync.LootFarm
 
             if (margin >= _settings.DMarketSettings.TargetMarginPercentForSaleOnLootFarm / 100)
             {
-                _logger.LogWarning(
-                    "{0}: Потенциальная покупка с DMarket-a и продажи на LootFarm-e, dmarketPrice : {1}, lootFarmPrice: {2}, margin: {3}, name: {4}",
-                    nameof(LootFarmSyncManager),  (decimal) targetPrice / 100,
-                    (decimal) x.Price / 100, margin, x.Name);
-
                 using var scope = _serviceProvider.CreateScope();
                 var dbContext = scope.ServiceProvider.GetRequiredService<SteamTraderDbContext>();
                 

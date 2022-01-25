@@ -32,7 +32,7 @@ namespace SteamTrader.Core.Services.ApiClients.DMarket
 
             try
             {
-                var uri = DMarketEndpoints.BaseUrl + DMarketEndpoints.GetOffersForItem(gameId, balance, cursor);
+                var uri = DMarketEndpoints.BaseUrl + DMarketEndpoints.GetMarketplaceItems(gameId, balance, cursor);
 
                 var currentRetryCount = 0;
                 
@@ -93,19 +93,45 @@ namespace SteamTrader.Core.Services.ApiClients.DMarket
             }
         }
 
-        public async Task<ApiGetOffersResponse> GetOffersForItem(string gameId, string marketplaceName)
+        public async Task<ApiGetOffersResponse> GetCurrentOffers(string gameId, string marketplaceName, int retryCount = 5)
         {
             var proxy = await _proxyBalancer.GetFreeProxy(ProxyBalancer.DMarketProxyKey);
             try
             {
                 var uri = DMarketEndpoints.BaseUrl + DMarketEndpoints.GetCurrentOffers(gameId, marketplaceName);
 
-                var requestMessage = CreateRequestMessage<string>(uri, HttpMethod.Get, false);
-                var response = await proxy.HttpClient.SendAsync(requestMessage);
-                var responseString = await response.Content.ReadAsStringAsync();
+                var currentRetryCount = 0;
+                
+                do
+                {
+                    try
+                    {
+                        var response = await proxy.HttpClient.GetAsync(uri);
+                        
+                        if (response.StatusCode is HttpStatusCode.TooManyRequests or HttpStatusCode.Forbidden or HttpStatusCode.BadGateway)
+                        {
+                            proxy.Lock(ProxyBalancer.DMarketProxyKey);
+                            return await GetCurrentOffers(gameId, marketplaceName);
+                        }
 
-                var result = JsonConvert.DeserializeObject<ApiGetOffersResponse>(responseString);
-                return result;
+                        if (!response.IsSuccessStatusCode)
+                            return null;
+                            
+                        var responseString = await response.Content.ReadAsStringAsync();
+
+                        var result = JsonConvert.DeserializeObject<ApiGetOffersResponse>(responseString);
+                        return result;
+                    }
+                    catch (Exception)
+                    {
+                        await Task.Delay(3000);
+                        currentRetryCount++;
+
+                        if (retryCount < currentRetryCount)
+                            throw;
+                    }
+                } while (currentRetryCount < retryCount);
+                return null;
             }
             finally
             {
