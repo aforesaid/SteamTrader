@@ -143,7 +143,7 @@ namespace SteamTrader.Core.Services.Sync.LootFarm
                     (decimal) targetPrice / 100, margin, x.Name);
 
                 using var scope = _serviceProvider.CreateScope();
-                var dbContext = _serviceProvider.GetRequiredService<SteamTraderDbContext>();
+                var dbContext = scope.ServiceProvider.GetRequiredService<SteamTraderDbContext>();
                 
                 var newTradeOffer = new TradeOfferEntity(OfferSourceEnum.LootFarm, OfferSourceEnum.DMarket,
                     (decimal) x.Price / 100, (decimal) targetPrice / 100, margin, gameId, x.Name);
