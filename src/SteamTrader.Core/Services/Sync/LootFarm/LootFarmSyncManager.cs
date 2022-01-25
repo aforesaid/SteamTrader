@@ -139,7 +139,7 @@ namespace SteamTrader.Core.Services.Sync.LootFarm
                          x.Price;
             var margin = profit / x.Price;
 
-            if (margin >= _settings.DMarketSettings.TargetMarginPercentForSaleOnLootFarm / 100)
+            if (margin >= _settings.LootFarmSettings.TargetMarginPercentForSaleOnDMarket / 100)
             {
                 _logger.LogWarning(
                     "{0}: Потенциальная покупка с LootFarm-a и продажи на DMarket-e, lootFarmPrice : {1}, dmarketPrice: {2}, margin: {3}, name: {4}",
@@ -166,7 +166,7 @@ namespace SteamTrader.Core.Services.Sync.LootFarm
             var profit = x.Price * (1 - _settings.LootFarmSettings.SaleCommissionPercent / 100) - targetPrice;
             var margin = profit / targetPrice;
 
-            if (margin >= _settings.LootFarmSettings.TargetMarginPercentForSaleOnDMarket / 100)
+            if (margin >= _settings.DMarketSettings.TargetMarginPercentForSaleOnLootFarm / 100)
             {
                 _logger.LogWarning(
                     "{0}: Потенциальная покупка с DMarket-a и продажи на LootFarm-e, dmarketPrice : {1}, lootFarmPrice: {2}, margin: {3}, name: {4}",
