@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using SteamTrader.Core.Configuration;
@@ -23,18 +24,17 @@ namespace SteamTrader.Core.Services.Sync.LootFarm
         private readonly IDMarketApiClient _dMarketApiClient;
         private readonly ILootFarmApiClient _lootFarmApiClient;
         private readonly Settings _settings;
-        private readonly SteamTraderDbContext _dbContext;
+        private readonly IServiceProvider _serviceProvider;
 
         public LootFarmSyncManager(ILogger<LootFarmSyncManager> logger, 
             IDMarketApiClient dMarketApiClient, 
             ILootFarmApiClient lootFarmApiClient, 
             IOptions<Settings> settings,
-            SteamTraderDbContext dbContext)
+            IServiceProvider serviceProvider)
         {
             _logger = logger;
             _dMarketApiClient = dMarketApiClient;
             _lootFarmApiClient = lootFarmApiClient;
-            _dbContext = dbContext;
             _settings = settings.Value;
         }
 
@@ -61,7 +61,7 @@ namespace SteamTrader.Core.Services.Sync.LootFarm
                 IsSyncingNow = false;
             }
         }
-
+        
         private async Task HandleGame(string gameId)
         {
             _logger.LogInformation("{0}: Начинаю синхронизацию по выводу из LootFarm-a на DMarket, игра {1}",
@@ -141,10 +141,14 @@ namespace SteamTrader.Core.Services.Sync.LootFarm
                     "{0}: Потенциальная покупка с LootFarm-a и продажи на DMarket-e, lootFarmPrice : {1}, dmarketPrice: {2}, margin: {3}, name: {4}",
                     nameof(LootFarmSyncManager), (decimal) x.Price / 100,
                     (decimal) targetPrice / 100, margin, x.Name);
+
+                using var scope = _serviceProvider.CreateScope();
+                var dbContext = _serviceProvider.GetRequiredService<SteamTraderDbContext>();
+                
                 var newTradeOffer = new TradeOfferEntity(OfferSourceEnum.LootFarm, OfferSourceEnum.DMarket,
                     (decimal) x.Price / 100, (decimal) targetPrice / 100, margin, gameId, x.Name);
-                await _dbContext.TradeOffers.AddAsync(newTradeOffer);
-                await _dbContext.SaveChangesAsync();
+                await dbContext.TradeOffers.AddAsync(newTradeOffer);
+                await dbContext.SaveChangesAsync();
             }
         }
     }

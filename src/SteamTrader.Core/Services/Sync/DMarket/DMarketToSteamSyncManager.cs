@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using SteamTrader.Core.Configuration;
@@ -22,7 +23,7 @@ namespace SteamTrader.Core.Services.Sync.DMarket
         private readonly ILogger<DMarketToSteamSyncManager> _logger;
         private readonly IDMarketApiClient _dMarketApiClient;
         private readonly ISteamApiClient _steamApiClient;
-        private readonly SteamTraderDbContext _dbContext;
+        private readonly IServiceProvider _serviceProvider;
         private readonly Settings _settings;
         
         private DateTime? _lastSyncTime;
@@ -31,13 +32,13 @@ namespace SteamTrader.Core.Services.Sync.DMarket
             ISteamApiClient steamApiClient,
             IOptions<Settings> settings,
             ILogger<DMarketToSteamSyncManager> logger,
-            SteamTraderDbContext dbContext)
+            IServiceProvider serviceProvider)
         {
             _dMarketApiClient = dMarketApiClient;
             _steamApiClient = steamApiClient;
             _settings = settings.Value;
             _logger = logger;
-            _dbContext = dbContext;
+            _serviceProvider = serviceProvider;
         }
 
         public async Task Sync(bool enabledBalanceFilter = false)
@@ -172,10 +173,14 @@ namespace SteamTrader.Core.Services.Sync.DMarket
                 _logger.LogWarning(
                     "Потенциальная покупка с DMarket-a и продажи в Steam-е: steamLowPrice: {0}, dmarketPrice: {1}, margin {2} title: {3}",
                     minSteamPrice, sellPrice, margin, title);
+
+                using var scope = _serviceProvider.CreateScope();
+                var dbContext = scope.ServiceProvider.GetRequiredService<SteamTraderDbContext>();
+                
                 var newTradeOffer = new TradeOfferEntity(OfferSourceEnum.DMarket, OfferSourceEnum.Steam, sellPrice,
                     minSteamPrice, margin, gameId, title);
-                await _dbContext.TradeOffers.AddAsync(newTradeOffer);
-                await _dbContext.SaveChangesAsync();
+                await dbContext.TradeOffers.AddAsync(newTradeOffer);
+                await dbContext.SaveChangesAsync();
             }
         }
     }

@@ -23,8 +23,8 @@ namespace SteamTrader.API.Extensions
             services.AddScoped<TradeOffersService>();
             
             services.AddSingleton<ProxyBalancer>();
-            services.AddScoped<DMarketToSteamSyncManager>();
-            services.AddScoped<LootFarmSyncManager>();
+            services.AddSingleton<DMarketToSteamSyncManager>();
+            services.AddSingleton<LootFarmSyncManager>();
 
             services.AddSingleton<DMarketToSteamBackgroundService>();
             

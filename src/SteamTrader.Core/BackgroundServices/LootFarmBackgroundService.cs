@@ -11,14 +11,14 @@ namespace SteamTrader.Core.BackgroundServices
     public class LootFarmBackgroundService : IHostedService, IDisposable
     {
         private readonly ILogger<LootFarmBackgroundService> _logger;
-        private readonly IServiceProvider _serviceProvider;
+        private readonly LootFarmSyncManager _syncManager;
         private Timer _timer = null!;
 
         public LootFarmBackgroundService(ILogger<LootFarmBackgroundService> logger,
-            IServiceProvider serviceProvider)
+            LootFarmSyncManager syncManager)
         {
             _logger = logger;
-            _serviceProvider = serviceProvider;
+            _syncManager = syncManager;
         }
 
         public Task StartAsync(CancellationToken stoppingToken)
@@ -35,9 +35,7 @@ namespace SteamTrader.Core.BackgroundServices
         {
             try
             {
-                using var scope = _serviceProvider.CreateScope();
-                var lootFarmSyncManager = scope.ServiceProvider.GetRequiredService<LootFarmSyncManager>();
-                await lootFarmSyncManager.SyncForBuyFromLootFarmToSaleOnDMarket();
+                await _syncManager.SyncForBuyFromLootFarmToSaleOnDMarket();
             }
             catch (Exception e)
             {
