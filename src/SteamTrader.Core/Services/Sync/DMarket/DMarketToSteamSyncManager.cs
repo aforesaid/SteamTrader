@@ -175,9 +175,6 @@ namespace SteamTrader.Core.Services.Sync.DMarket
                 var newTradeOffer = new TradeOfferEntity(OfferSourceEnum.DMarket, OfferSourceEnum.Steam, sellPrice,
                     minSteamPrice, margin, gameId, title);
                 await _dbContext.TradeOffers.AddAsync(newTradeOffer);
-                await _dbContext.SaveChangesAsync();
-                
-                _logger.LogInformation("Элемент был добавлен в БД");
             }
         }
     }

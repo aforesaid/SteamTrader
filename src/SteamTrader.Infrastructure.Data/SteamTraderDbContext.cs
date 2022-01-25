@@ -7,7 +7,7 @@ using SteamTrader.Domain.Repository;
 
 namespace SteamTrader.Infrastructure.Data
 {
-    public class SteamTraderDbContext : DbContext, IUnitOfWork
+    public class SteamTraderDbContext : DbContext
     {
         public DbSet<TradeOfferEntity> TradeOffers { get; protected set; }
         public SteamTraderDbContext() : base() { }
@@ -40,10 +40,6 @@ namespace SteamTrader.Infrastructure.Data
         }
 
         public override int SaveChanges(bool acceptAllChangesOnSuccess)
-        {
-            throw new NotSupportedException();
-        }
-        public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = new CancellationToken())
         {
             throw new NotSupportedException();
         }
