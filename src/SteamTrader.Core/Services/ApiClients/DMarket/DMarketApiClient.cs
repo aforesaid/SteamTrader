@@ -32,7 +32,7 @@ namespace SteamTrader.Core.Services.ApiClients.DMarket
 
             try
             {
-                var uri = DMarketEndpoints.BaseUrl + DMarketEndpoints.GetMarketplaceItemsUri(gameId, balance, cursor);
+                var uri = DMarketEndpoints.BaseUrl + DMarketEndpoints.GetOffersForItem(gameId, balance, cursor);
 
                 var currentRetryCount = 0;
                 
@@ -78,13 +78,33 @@ namespace SteamTrader.Core.Services.ApiClients.DMarket
             var proxy = await _proxyBalancer.GetFreeProxy(ProxyBalancer.DMarketProxyKey);
             try
             {
-                var uri = DMarketEndpoints.GetBalance;
+                var uri = DMarketEndpoints.BaseUrl + DMarketEndpoints.GetBalance;
 
                 var requestMessage = CreateRequestMessage<string>(uri, HttpMethod.Get, false);
                 var response = await proxy.HttpClient.SendAsync(requestMessage);
                 var responseString = await response.Content.ReadAsStringAsync();
 
                 var result = JsonConvert.DeserializeObject<ApiGetBalanceResponse>(responseString);
+                return result;
+            }
+            finally
+            {
+                proxy.SetUnreserved(ProxyBalancer.DMarketProxyKey);
+            }
+        }
+
+        public async Task<ApiGetOffersResponse> GetOffersForItem(string gameId, string marketplaceName)
+        {
+            var proxy = await _proxyBalancer.GetFreeProxy(ProxyBalancer.DMarketProxyKey);
+            try
+            {
+                var uri = DMarketEndpoints.BaseUrl + DMarketEndpoints.GetCurrentOffers(gameId, marketplaceName);
+
+                var requestMessage = CreateRequestMessage<string>(uri, HttpMethod.Get, false);
+                var response = await proxy.HttpClient.SendAsync(requestMessage);
+                var responseString = await response.Content.ReadAsStringAsync();
+
+                var result = JsonConvert.DeserializeObject<ApiGetOffersResponse>(responseString);
                 return result;
             }
             finally

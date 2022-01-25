@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using SteamTrader.Core.Configuration;
 using SteamTrader.Core.Services.ApiClients.DMarket;
+using SteamTrader.Core.Services.ApiClients.DMarket.Requests.GetItems;
 using SteamTrader.Core.Services.ApiClients.DMarket.Requests.GetLastSales;
 using SteamTrader.Core.Services.ApiClients.LootFarm;
 using SteamTrader.Core.Services.ApiClients.LootFarm.GetActualPrices;
@@ -67,64 +68,98 @@ namespace SteamTrader.Core.Services.Sync.LootFarm
         private async Task HandleGame(string gameId)
         {
             _logger.LogInformation("{0}: Начинаю синхронизацию по выводу из LootFarm-a на DMarket, игра {1}",
-                        nameof(LootFarmSyncManager), gameId);
-                    _logger.BeginScope("{0}: Начинаю синхронизацию по игре {1}",
-                        nameof(LootFarmSyncManager), gameId);
+                nameof(LootFarmSyncManager), gameId);
+            _logger.BeginScope("{0}: Начинаю синхронизацию по игре {1}",
+                nameof(LootFarmSyncManager), gameId);
+            
+            var items = gameId switch
+            {
+                "a8db" => await _lootFarmApiClient.GetPricesForCsGo(),
+                "tf2" => await _lootFarmApiClient.GetPricesForTf2(),
+                "9a92" => await _lootFarmApiClient.GetPricesForDota2(),
+                _ => throw new NotSupportedException($"Указан не поддерживаемый тип игры для синхронизации в сервисе {nameof(LootFarmSyncManager)}")
+            };
+
+            var itemsForTradeToDMarket = items.Where(x => x.Tr > 0);
+            var itemsForTradeToLootFarm = items.Where(x => x.Have < x.Max);
+            
+            _logger.LogInformation("{0}: Найдено айтемов на LootFarm {1}, начинаю сравнение с DMarket-ом",
+                nameof(LootFarmSyncManager), items.Length);
+
+            var countHandledItems = 0;
+            
+            using var semaphore = new SemaphoreSlim(10);
+            var tasksToDMarket = itemsForTradeToDMarket.Select(async x =>
+            {
+                await semaphore.WaitAsync();
+                try
+                {
+                    var dMarketDetails = await _dMarketApiClient.GetLastSales(gameId, x.Name);
                     
-                    var items = gameId switch
+                    if (dMarketDetails == null)
+                        return;
+                    
+                    var countLastSales = dMarketDetails.LastSales
+                        .Count(i => DateTimeOffset.FromUnixTimeSeconds(i.Date) > DateTime.Today.AddDays(-2));
+
+                    if (countLastSales >= _settings.DMarketSettings.NeededQtySalesForTwoDays)
                     {
-                        "a8db" => await _lootFarmApiClient.GetPricesForCsGo(),
-                        "tf2" => await _lootFarmApiClient.GetPricesForTf2(),
-                        "9a92" => await _lootFarmApiClient.GetPricesForDota2(),
-                        _ => throw new NotSupportedException($"Указан не поддерживаемый тип игры для синхронизации в сервисе {nameof(LootFarmSyncManager)}")
-                    };
-                    
-                    _logger.LogInformation("{0}: Найдено айтемов на LootFarm {1}, начинаю сравнение с DMarket-ом",
-                        nameof(LootFarmSyncManager), items.Length);
-
-                    var countHandledItems = 0;
-                    
-                    using var semaphore = new SemaphoreSlim(10);
-                    var tasks = items.Select(async x =>
-                    {
-                        await semaphore.WaitAsync();
-                        try
-                        {
-                            var dMarketDetails = await _dMarketApiClient.GetLastSales(gameId, x.Name);
-                            
-                            if (dMarketDetails == null)
-                                return;
-                            
-                            var countLastSales = dMarketDetails.LastSales
-                                .Count(i => DateTimeOffset.FromUnixTimeSeconds(i.Date) > DateTime.Today.AddDays(-2));
-
-                            if (countLastSales >= _settings.DMarketSettings.NeededQtySalesForTwoDays)
-                            {
-                                await HandleLootFarmToDMarket(dMarketDetails, x, gameId);
-                            }
-                            await HandleDMarketToLootFarm(dMarketDetails, x, gameId);
-
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger.LogWarning(ex, "{0}: Возникла ошибка во время синка игры {1}",
-                                nameof(LootFarmSyncManager), gameId);
-                        }
-                        finally
-                        {
-                            semaphore.Release();
-                            
-                            countHandledItems++;
-                            
-                            if (countHandledItems % 100 == 0)
-                                _logger.LogInformation("{0}: Обработано {1} айтемов из {2}",
-                                    nameof(LootFarmSyncManager), countHandledItems, items.Length);
-                        }
-                    });
-
-                    await Task.WhenAll(tasks);
-                    _logger.LogInformation("{0}: Синхронизация айтемов с DMarket-ом по игре {1} завершена",
+                        await HandleLootFarmToDMarket(dMarketDetails, x, gameId);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "{0}: Возникла ошибка во время синка игры {1}",
                         nameof(LootFarmSyncManager), gameId);
+                }
+                finally
+                {
+                    semaphore.Release();
+                    
+                    countHandledItems++;
+                    
+                    if (countHandledItems % 100 == 0)
+                        _logger.LogInformation("{0}: Обработано {1} айтемов из {2}",
+                            nameof(LootFarmSyncManager), countHandledItems, items.Length);
+                }
+            });
+
+            await Task.WhenAll(tasksToDMarket);
+            
+            var tasksToLootFarm = itemsForTradeToLootFarm.Select(async x =>
+            {
+                await semaphore.WaitAsync();
+                try
+                {
+                    var offers = await _dMarketApiClient.GetOffersForItem(gameId, x.Name);
+
+                    if (offers.Objects.Length > 0)
+                    {
+                        var offer = offers.Objects.First();
+                        await HandleDMarketToLootFarm(offer, x, gameId);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "{0}: Возникла ошибка во время синка игры {1}",
+                        nameof(LootFarmSyncManager), gameId);
+                }
+                finally
+                {
+                    semaphore.Release();
+                    
+                    countHandledItems++;
+                    
+                    if (countHandledItems % 100 == 0)
+                        _logger.LogInformation("{0}: Обработано {1} айтемов из {2}",
+                            nameof(LootFarmSyncManager), countHandledItems, items.Length);
+                }
+            });
+
+            await Task.WhenAll(tasksToLootFarm);
+            
+            _logger.LogInformation("{0}: Синхронизация айтемов с DMarket-ом по игре {1} завершена",
+                nameof(LootFarmSyncManager), gameId);
         }
 
         private async Task HandleLootFarmToDMarket(ApiGetLastSalesResponse dMarketDetails, GetActualPricesItem x, string gameId)
@@ -155,13 +190,9 @@ namespace SteamTrader.Core.Services.Sync.LootFarm
                 await dbContext.SaveChangesAsync();
             }
         }
-        private async Task HandleDMarketToLootFarm(ApiGetLastSalesResponse dMarketDetails, GetActualPricesItem x, string gameId)
+        private async Task HandleDMarketToLootFarm(ApiGetOffersItem dmarketOffer, GetActualPricesItem x, string gameId)
         {
-            var middleSalePrice = (long) dMarketDetails.LastSales
-                .Average(i => i.Price.Amount);
-            var lastSalePrice = dMarketDetails.LastSales.First().Price.Amount;
-
-            var targetPrice = Math.Min(middleSalePrice, lastSalePrice);
+            var targetPrice = long.Parse(dmarketOffer.Price.Usd);
 
             var profit = x.Price * (1 - _settings.LootFarmSettings.SaleCommissionPercent / 100) - targetPrice;
             var margin = profit / targetPrice;
