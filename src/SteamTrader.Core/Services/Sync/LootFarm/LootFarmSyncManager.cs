@@ -145,6 +145,8 @@ namespace SteamTrader.Core.Services.Sync.LootFarm
                     (decimal) x.Price / 100, (decimal) targetPrice / 100, margin, gameId, x.Name);
                 await _dbContext.TradeOffers.AddAsync(newTradeOffer);
                 await _dbContext.SaveChangesAsync();
+                
+                _logger.LogInformation("Элемент был добавлен в БД");
             }
         }
     }

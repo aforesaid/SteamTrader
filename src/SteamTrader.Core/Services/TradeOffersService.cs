@@ -22,6 +22,7 @@ namespace SteamTrader.Core.Services
         public async Task<TradeOfferDto[]> GetTradeOffers(int? skip, int? take)
         {
             var existItems = await _dbContext.TradeOffers
+                .AsQueryable()
                 .Skip(skip ?? 0)
                 .Take(take ?? 100)
                 .ToArrayAsync();
