@@ -100,6 +100,8 @@ namespace SteamTrader.Core.Services.Sync.LootFarm
                             {
                                 await HandleLootFarmToDMarket(dMarketDetails, x, gameId);
                             }
+                            await HandleDMarketToLootFarm(dMarketDetails, x, gameId);
+
                         }
                         catch (Exception ex)
                         {
@@ -147,6 +149,33 @@ namespace SteamTrader.Core.Services.Sync.LootFarm
                 
                 var newTradeOffer = new TradeOfferEntity(OfferSourceEnum.LootFarm, OfferSourceEnum.DMarket,
                     (decimal) x.Price / 100, (decimal) targetPrice / 100, margin, gameId, x.Name);
+                await dbContext.TradeOffers.AddAsync(newTradeOffer);
+                await dbContext.SaveChangesAsync();
+            }
+        }
+        private async Task HandleDMarketToLootFarm(ApiGetLastSalesResponse dMarketDetails, GetActualPricesItem x, string gameId)
+        {
+            var middleSalePrice = (long) dMarketDetails.LastSales
+                .Average(i => i.Price.Amount);
+            var lastSalePrice = dMarketDetails.LastSales.First().Price.Amount;
+
+            var targetPrice = Math.Min(middleSalePrice, lastSalePrice);
+
+            var profit = x.Price * (1 - _settings.LootFarmSettings.SaleCommissionPercent / 100) - targetPrice;
+            var margin = profit / targetPrice;
+
+            if (margin >= _settings.LootFarmSettings.TargetMarginPercentForSaleOnDMarket / 100)
+            {
+                _logger.LogWarning(
+                    "{0}: Потенциальная покупка с DMarket-a и продажи на LootFarm-e, dmarketPrice : {1}, lootFarmPrice: {2}, margin: {3}, name: {4}",
+                    nameof(LootFarmSyncManager),  (decimal) targetPrice / 100,
+                    (decimal) x.Price / 100, margin, x.Name);
+
+                using var scope = _serviceProvider.CreateScope();
+                var dbContext = scope.ServiceProvider.GetRequiredService<SteamTraderDbContext>();
+                
+                var newTradeOffer = new TradeOfferEntity(OfferSourceEnum.DMarket, OfferSourceEnum.LootFarm,
+                    (decimal) targetPrice / 100, (decimal) x.Price / 100, margin, gameId, x.Name);
                 await dbContext.TradeOffers.AddAsync(newTradeOffer);
                 await dbContext.SaveChangesAsync();
             }
