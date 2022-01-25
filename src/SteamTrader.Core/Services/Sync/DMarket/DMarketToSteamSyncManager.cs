@@ -123,7 +123,7 @@ namespace SteamTrader.Core.Services.Sync.DMarket
                                     var minSteamPrice = Math.Min(steamDetails.LowestPriceValue.Value,
                                         steamDetails.MedianPriceValue ?? 0);
                                     
-                                    HandleItemBuyInDMarketSaleInSteam(minSteamPrice, sellPrice, x.Title, gameId);
+                                    await HandleItemBuyInDMarketSaleInSteam(minSteamPrice, sellPrice, x.Title, gameId);
                                 }
                             }
                             catch
@@ -175,6 +175,7 @@ namespace SteamTrader.Core.Services.Sync.DMarket
                 var newTradeOffer = new TradeOfferEntity(OfferSourceEnum.DMarket, OfferSourceEnum.Steam, sellPrice,
                     minSteamPrice, margin, gameId, title);
                 await _dbContext.TradeOffers.AddAsync(newTradeOffer);
+                await _dbContext.SaveChangesAsync();
             }
         }
     }
