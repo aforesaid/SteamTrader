@@ -23,6 +23,7 @@ namespace SteamTrader.Core.Services
         {
             var existItems = await _dbContext.TradeOffers
                 .AsQueryable()
+                .OrderByDescending(x => x.DateTime)
                 .Skip(skip ?? 0)
                 .Take(take ?? 100)
                 .ToArrayAsync();
