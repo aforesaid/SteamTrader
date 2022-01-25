@@ -28,7 +28,7 @@ namespace SteamTrader.Infrastructure.Data
         {
             if (!optionsBuilder.IsConfigured)
             {
-                optionsBuilder.UseNpgsql("User ID=postgres;Password=root;Server=localhost;Port=5432;Database=sell_spasibo;Integrated Security=true;");
+                optionsBuilder.UseNpgsql("User ID=postgres;Password=root;Server=localhost;Port=5432;Database=steamtrader;Integrated Security=true;");
             }
             base.OnConfiguring(optionsBuilder);
         }

@@ -31,8 +31,11 @@ namespace SteamTrader.API
                     npgsql.MigrationsAssembly("SteamTrader.Infrastructure.Data"));
             });
         }
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env,
+            SteamTraderDbContext dbContext)
         {
+            dbContext.Database.Migrate();
+            
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();

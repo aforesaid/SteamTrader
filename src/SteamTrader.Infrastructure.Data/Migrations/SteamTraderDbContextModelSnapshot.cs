@@ -42,6 +42,9 @@ namespace SteamTrader.Infrastructure.Data.Migrations
                     b.Property<decimal>("Margin")
                         .HasColumnType("numeric");
 
+                    b.Property<string>("Name")
+                        .HasColumnType("text");
+
                     b.Property<int>("To")
                         .HasColumnType("integer");
 

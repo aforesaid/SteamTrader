@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using SteamTrader.Core.Services.Sync.DMarket;
@@ -9,15 +10,15 @@ namespace SteamTrader.Core.BackgroundServices
 {
     public class DMarketToSteamBackgroundService : IHostedService, IDisposable
     {
+        private readonly IServiceProvider _serviceProvider;
         private readonly ILogger<DMarketToSteamBackgroundService> _logger;
-        private readonly DMarketToSteamSyncManager _dMarketToSteamSyncManager;
         private Timer _timer = null!;
 
-        public DMarketToSteamBackgroundService(ILogger<DMarketToSteamBackgroundService> logger, 
-            DMarketToSteamSyncManager dMarketToSteamSyncManager)
+        public DMarketToSteamBackgroundService(ILogger<DMarketToSteamBackgroundService> logger,
+            IServiceProvider serviceProvider)
         {
             _logger = logger;
-            _dMarketToSteamSyncManager = dMarketToSteamSyncManager;
+            _serviceProvider = serviceProvider;
         }
 
         public Task StartAsync(CancellationToken stoppingToken)
@@ -34,7 +35,9 @@ namespace SteamTrader.Core.BackgroundServices
         {
             try
             {
-                await _dMarketToSteamSyncManager.Sync();
+                using var scope = _serviceProvider.CreateScope();
+                var dMarketToSteamSyncManager = scope.ServiceProvider.GetRequiredService<DMarketToSteamSyncManager>();
+                await dMarketToSteamSyncManager.Sync();
             }
             catch (Exception e)
             {

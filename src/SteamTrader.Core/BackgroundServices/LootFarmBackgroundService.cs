@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using SteamTrader.Core.Services.Sync.LootFarm;
@@ -10,14 +11,14 @@ namespace SteamTrader.Core.BackgroundServices
     public class LootFarmBackgroundService : IHostedService, IDisposable
     {
         private readonly ILogger<LootFarmBackgroundService> _logger;
-        private readonly LootFarmSyncManager _lootFarmSyncManager;
+        private readonly IServiceProvider _serviceProvider;
         private Timer _timer = null!;
 
-        public LootFarmBackgroundService(ILogger<LootFarmBackgroundService> logger, 
-            LootFarmSyncManager lootFarmSyncManager)
+        public LootFarmBackgroundService(ILogger<LootFarmBackgroundService> logger,
+            IServiceProvider serviceProvider)
         {
             _logger = logger;
-            _lootFarmSyncManager = lootFarmSyncManager;
+            _serviceProvider = serviceProvider;
         }
 
         public Task StartAsync(CancellationToken stoppingToken)
@@ -34,7 +35,9 @@ namespace SteamTrader.Core.BackgroundServices
         {
             try
             {
-                await _lootFarmSyncManager.SyncForBuyFromLootFarmToSaleOnDMarket();
+                using var scope = _serviceProvider.CreateScope();
+                var lootFarmSyncManager = scope.ServiceProvider.GetRequiredService<LootFarmSyncManager>();
+                await lootFarmSyncManager.SyncForBuyFromLootFarmToSaleOnDMarket();
             }
             catch (Exception e)
             {
