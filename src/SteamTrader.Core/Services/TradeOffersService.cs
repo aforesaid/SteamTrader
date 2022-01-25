@@ -25,6 +25,9 @@ namespace SteamTrader.Core.Services
                 .Skip(skip ?? 0)
                 .Take(take ?? 100)
                 .ToArrayAsync();
+            _logger.LogDebug("{0}: Выбрано из базы {1} элементов", 
+                nameof(TradeOffersService), existItems.Length);
+            
             var items = existItems.Select(x =>
                 new TradeOfferDto(x.From.ToString(), 
                 x.To.ToString(),
