@@ -36,6 +36,8 @@ namespace SteamTrader.Core.Services.Sync.LootFarm
             _dMarketApiClient = dMarketApiClient;
             _lootFarmApiClient = lootFarmApiClient;
             _settings = settings.Value;
+
+            _serviceProvider = serviceProvider;
         }
 
         public async Task SyncForBuyFromLootFarmToSaleOnDMarket()
@@ -137,7 +139,7 @@ namespace SteamTrader.Core.Services.Sync.LootFarm
                          x.Price;
             var margin = profit / x.Price;
 
-            if (margin >= _settings.LootFarmSettings.TargetMarginPercentForSaleOnDMarket / 100)
+            if (margin >= _settings.DMarketSettings.TargetMarginPercentForSaleOnLootFarm / 100)
             {
                 _logger.LogWarning(
                     "{0}: Потенциальная покупка с LootFarm-a и продажи на DMarket-e, lootFarmPrice : {1}, dmarketPrice: {2}, margin: {3}, name: {4}",

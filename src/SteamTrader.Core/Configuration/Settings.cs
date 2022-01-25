@@ -28,6 +28,7 @@ namespace SteamTrader.Core.Configuration
         public string[] SaleGameIds { get; set; }
 
         public decimal SaleCommissionPercent { get; set; }
+        public decimal TargetMarginPercentForSaleOnLootFarm { get; set; }
         public int NeededQtySalesForTwoDays { get; set; }
     }
 
