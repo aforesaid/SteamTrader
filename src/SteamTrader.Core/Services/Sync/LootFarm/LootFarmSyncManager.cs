@@ -123,10 +123,11 @@ namespace SteamTrader.Core.Services.Sync.LootFarm
                 try
                 {
                     var offers = await _dMarketApiClient.GetCurrentOffers(gameId, x.Name);
-
-                    if (offers.Objects.Length > 0)
+                    var filteredOffers = offers.Objects.Where(i => i.Extra.TradeLock <= _settings.DMarketSettings.MaxTradeBan);
+                    
+                    if (filteredOffers.Any())
                     {
-                        var offer = offers.Objects.First();
+                        var offer = filteredOffers.First();
                         await HandleDMarketToLootFarm(offer, x, gameId);
                     }
                 }
