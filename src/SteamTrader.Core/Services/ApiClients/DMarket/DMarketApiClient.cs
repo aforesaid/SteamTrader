@@ -67,6 +67,11 @@ namespace SteamTrader.Core.Services.ApiClients.DMarket
 
                         return result;
                     }
+                    catch (TaskCanceledException)
+                    {
+                        proxy.Lock(ProxyBalancer.DMarketProxyKey);
+                        proxy = await _proxyBalancer.GetFreeProxy(ProxyBalancer.DMarketProxyKey);
+                    }
                     catch (TooManyRequestsException)
                     {
                         proxy.Lock(ProxyBalancer.DMarketProxyKey);
