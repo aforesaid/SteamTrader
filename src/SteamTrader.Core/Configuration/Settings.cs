@@ -37,6 +37,7 @@ namespace SteamTrader.Core.Configuration
         public int Port { get; set; }
         public string Login { get; set; }
         public string Password { get; set; }
+        public string[] SupportedKeys { get; set; }
     }
     public class LootFarmSettings
     {

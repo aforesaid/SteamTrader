@@ -27,22 +27,31 @@ namespace SteamTrader.Core.Services.Proxy
 
         private void Configure()
         {
-            var httpHandlers = _settings.Proxies.Select(x => new HttpClientHandler
+            var proxyDetails = _settings.Proxies.Select((x, i) =>
             {
-                Proxy = new WebProxy(new Uri($"http://{x.Ip}:{x.Port}"))
+                var httpHandler = new HttpClientHandler
                 {
-                    UseDefaultCredentials = false,
-                    Credentials = new NetworkCredential(x.Login, x.Password)
-                },
-                UseProxy = true,
-                UseDefaultCredentials = false
-            });
-            
-            _proxyList = httpHandlers.Select((x, i) => new ProxyDetails(new HttpClient(x)
+                    Proxy = new WebProxy(new Uri($"http://{x.Ip}:{x.Port}"))
+                    {
+                        UseDefaultCredentials = false,
+                        Credentials = new NetworkCredential(x.Login, x.Password)
+                    },
+                    UseProxy = true,
+                    UseDefaultCredentials = false
+                };
+                var httpClient = new HttpClient(httpHandler)
                 {
                     Timeout = _settings.HttpTimeout
-                }, i))
-                .ToList();
+                };
+
+                var proxyItem = new ProxyDetails(httpClient, i);
+                
+                x.SupportedKeys.ToList().ForEach(s =>
+                    proxyItem.ProxyKeyDetailsList.Add(new ProxyKeyDetails(s, _settings.ProxyLockTime[s])));
+                return proxyItem;
+            });
+
+            _proxyList = proxyDetails.ToList();
 
             _timer = new Timer(1000);
             _timer.Elapsed += (_, _) => UpdateProxyStatus();
@@ -62,29 +71,15 @@ namespace SteamTrader.Core.Services.Proxy
                 {
                     lock (targetProxy.ConcurrencyObject)
                     {
-                        if (targetProxy.ProxyKeyDetailsList.All(i => i.Key != key))
+                        var proxyDetails = targetProxy.ProxyKeyDetailsList.FirstOrDefault(i => i.Key == key);
+                        if (proxyDetails is {IsReserved: false, IsLocked: false})
                         {
-                            var proxyKeyDetails = new ProxyKeyDetails(key, proxyLockTime);
-                            proxyKeyDetails.SetReserved();
-                            
-                            targetProxy.ProxyKeyDetailsList.Add(proxyKeyDetails);
-                            
+                            proxyDetails.SetReserved();
                             proxy = targetProxy;
-                        }
-                        else
-                        {
-                            var proxyDetails = targetProxy.ProxyKeyDetailsList.FirstOrDefault(i => i.Key == key);
-                            if (proxyDetails is {IsReserved: false, IsLocked: false})
-                            {
-                                proxyDetails.SetReserved();
-                                proxy = targetProxy;
-                            }
                         }
 
                         if (proxy != null)
-                        {
                             break;
-                        }
                     }
                 }
                 
@@ -94,7 +89,7 @@ namespace SteamTrader.Core.Services.Proxy
                     if ((DateTime.Now - timeStarted).Minutes > maxCountMinutes)
                         throw new NotFoundFreeProxyException(key);
                     
-                    await Task.Delay(proxyLockTime.Minutes);
+                    await Task.Delay(proxyLockTime.Milliseconds);
                 }
                 
             } while (proxy == null);
@@ -136,7 +131,7 @@ namespace SteamTrader.Core.Services.Proxy
 
     public class ProxyDetails : IDisposable
     {
-        public object ConcurrencyObject = new();
+        public readonly object ConcurrencyObject = new();
         private readonly Dictionary<string, object> _concurrencyObjects = new()
         {
             [ProxyBalancer.SteamProxyKey] = new object(),

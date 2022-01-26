@@ -99,7 +99,7 @@ namespace SteamTrader.Core.Services.Sync.DMarket
                             filteringItems = filteringItems.Where(x => x.CreatedAt > unixTimeLastUpdated);
                         }
 
-                        using var semaphoreSlim = new SemaphoreSlim(5);
+                        using var semaphoreSlim = new SemaphoreSlim(10);
 
                         var tasks = filteringItems.Select(async x =>
                         {

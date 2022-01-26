@@ -86,7 +86,7 @@ namespace SteamTrader.Core.Services.Sync.LootFarm
             _logger.LogInformation("{0}: Найдено айтемов на LootFarm {1}, начинаю сравнение с DMarket-ом",
                 nameof(LootFarmSyncManager), items.Length);
             
-            using var semaphore = new SemaphoreSlim(5);
+            using var semaphore = new SemaphoreSlim(10);
             var tasksToDMarket = itemsForTradeToDMarket.Select(async x =>
             {
                 await semaphore.WaitAsync();
