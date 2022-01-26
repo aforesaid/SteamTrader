@@ -34,7 +34,7 @@ namespace SteamTrader.Core.Services.ApiClients.DMarket
 
             try
             {
-                var uri = DMarketEndpoints.BaseUrl + DMarketEndpoints.GetMarketplaceItems(gameId, title: title, priceTo: balance, cursor: cursor);
+                var uri = DMarketEndpoints.GetMarketplaceItems(gameId, title: title, priceTo: balance, cursor: cursor);
 
                 var currentRetryCount = 0;
                 
@@ -42,7 +42,9 @@ namespace SteamTrader.Core.Services.ApiClients.DMarket
                 {
                     try
                     {
-                        var response = await proxy.HttpClient.GetAsync(uri);
+                        var requestMessage = CreateRequestMessage<string>(uri, HttpMethod.Get, false);
+
+                        var response = await proxy.HttpClient.SendAsync(requestMessage);
 
                         if (response.StatusCode is HttpStatusCode.TooManyRequests or HttpStatusCode.Forbidden or
                             HttpStatusCode.BadGateway)

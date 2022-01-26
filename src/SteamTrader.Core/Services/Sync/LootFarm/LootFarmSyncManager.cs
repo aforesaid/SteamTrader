@@ -165,11 +165,6 @@ namespace SteamTrader.Core.Services.Sync.LootFarm
 
             if (margin >= _settings.LootFarmSettings.TargetMarginPercentForSaleOnDMarket / 100)
             {
-                _logger.LogWarning(
-                    "{0}: Потенциальная покупка с LootFarm-a и продажи на DMarket-e, lootFarmPrice : {1}, dmarketPrice: {2}, margin: {3}, name: {4}",
-                    nameof(LootFarmSyncManager), (decimal) x.Price / 100,
-                    (decimal) targetPrice / 100, margin, x.Name);
-
                 using var scope = _serviceProvider.CreateScope();
                 var dbContext = scope.ServiceProvider.GetRequiredService<SteamTraderDbContext>();
                 
