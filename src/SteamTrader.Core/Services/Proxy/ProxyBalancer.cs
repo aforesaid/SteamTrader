@@ -92,7 +92,7 @@ namespace SteamTrader.Core.Services.Proxy
                 {
                     const int maxCountMinutes = 2;
                     if ((DateTime.Now - timeStarted).Minutes > maxCountMinutes)
-                        throw new NotFoundSteamFreeProxyException();
+                        throw new NotFoundFreeProxyException(key);
                     
                     await Task.Delay(proxyLockTime.Minutes);
                 }
@@ -298,10 +298,10 @@ namespace SteamTrader.Core.Services.Proxy
         }
     }
 
-    public class NotFoundSteamFreeProxyException : Exception
+    public class NotFoundFreeProxyException : Exception
     {
-        public NotFoundSteamFreeProxyException(string message = "Не найдены не заблокированные прокси на стороне Steam") 
-            : base(message)
+        public NotFoundFreeProxyException(string key)
+            : base( $"Не найдены не заблокированные прокси на стороне {key}") 
         { }
     }
 }

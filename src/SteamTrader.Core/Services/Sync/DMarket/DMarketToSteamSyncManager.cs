@@ -99,7 +99,7 @@ namespace SteamTrader.Core.Services.Sync.DMarket
                             filteringItems = filteringItems.Where(x => x.CreatedAt > unixTimeLastUpdated);
                         }
 
-                        using var semaphoreSlim = new SemaphoreSlim(10);
+                        using var semaphoreSlim = new SemaphoreSlim(5);
 
                         var tasks = filteringItems.Select(async x =>
                         {
@@ -152,7 +152,7 @@ namespace SteamTrader.Core.Services.Sync.DMarket
 
                 _lastSyncTime = syncTime;
             }
-            catch (NotFoundSteamFreeProxyException)
+            catch (NotFoundFreeProxyException)
             {
                 _logger.LogWarning("{0}: По причине заблокированных всех прокси синхронизация останавливается",
                     nameof(DMarketToSteamSyncManager));

@@ -60,7 +60,7 @@ namespace SteamTrader.Core.Services.ApiClients.Steam
                         await Task.Delay(3000);
                         currentRetryCount++;
 
-                        if (retryCount < currentRetryCount)
+                        if (retryCount <= currentRetryCount)
                             throw;
                     }
                 } while (currentRetryCount < retryCount);
@@ -74,12 +74,15 @@ namespace SteamTrader.Core.Services.ApiClients.Steam
                 await Task.Yield();
                 return await GetSalesForItem(itemName, gameId);
             }
-            catch (NotFoundSteamFreeProxyException)
+            catch (NotFoundFreeProxyException)
             {
+                currentProxy.Lock(ProxyBalancer.SteamProxyKey);
                 throw;
             }
             catch (Exception e)
             {
+                currentProxy.Lock(ProxyBalancer.SteamProxyKey);
+
                 _logger.LogError(e, "{0}: Не удалось обработать получение данных из Steam, запрос {@1}, ProxyId: {2}",
                     nameof(SteamApiClient), uri, currentProxy.ProxyId);
                 throw;
