@@ -90,7 +90,8 @@ namespace SteamTrader.Core.Services.Proxy
                 
                 if (proxy == null)
                 {
-                    if ((DateTime.Now - timeStarted).Minutes > proxyLockTime.Minutes * 2)
+                    const int maxCountMinutes = 2;
+                    if ((DateTime.Now - timeStarted).Minutes > maxCountMinutes)
                         throw new NotFoundSteamFreeProxyException();
                     
                     await Task.Delay(proxyLockTime.Minutes);
@@ -104,9 +105,9 @@ namespace SteamTrader.Core.Services.Proxy
         public int GetCountUnlockedProxy(string key)
             => _proxyList.Count(x => x.ProxyKeyDetailsList.All(i => i.Key != key) ||
                                      x.ProxyKeyDetailsList.First(i => i.Key == key).IsLocked);
-        
 
-        public void UpdateProxyStatus(string key = null)
+
+        private void UpdateProxyStatus(string key = null)
         {
             _proxyList.ForEach(x =>
             {
