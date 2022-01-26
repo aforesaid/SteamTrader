@@ -66,7 +66,7 @@ namespace SteamTrader.Core.Services.Sync.DMarket
                     ApiGetOffersResponse response;
                     string cursor = null;
                     
-                    const int maxCountPages = 10;
+                    const int maxCountPages = 3;
                     var currentPage = 0;
                     
                     do

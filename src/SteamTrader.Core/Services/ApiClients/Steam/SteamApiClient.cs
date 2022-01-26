@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using System.Web;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using SteamTrader.Core.Services.ApiClients.Exceptions;
 using SteamTrader.Core.Services.ApiClients.Steam.Requests;
 using SteamTrader.Core.Services.Proxy;
 
@@ -48,6 +49,11 @@ namespace SteamTrader.Core.Services.ApiClients.Steam
                         var responseString = await response.Content.ReadAsStringAsync();
                         var result = JsonConvert.DeserializeObject<ApiGetSalesForItemResponse>(responseString);
                         return result;
+                    }
+                    catch (TooManyRequestsException)
+                    {
+                        currentProxy.Lock(ProxyBalancer.SteamProxyKey);
+                        currentProxy = await _proxyBalancer.GetFreeProxy(ProxyBalancer.DMarketProxyKey);
                     }
                     catch (Exception)
                     {

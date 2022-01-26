@@ -52,30 +52,50 @@ namespace SteamTrader.Core.Services.Proxy
 
         public async Task<ProxyDetails> GetFreeProxy(string key)
         {
-            ProxyDetails proxy;
+            ProxyDetails proxy = null;
             var timeStarted = DateTime.Now;
+            var proxyLockTime = _settings.ProxyLockTime[key];
+            
             do
             {
-                var notCreatedProxyKeyDetailsForProxy =
-                    _proxyList.FirstOrDefault(x => x.ProxyKeyDetailsList.All(i => i.Key != key));
-                if (notCreatedProxyKeyDetailsForProxy != null)
+                foreach (var targetProxy in _proxyList)
                 {
-                    var proxyKeyDetails = new ProxyKeyDetails(key, _settings.ProxyLockTime[key]);
-                    proxyKeyDetails.SetReserved();
+                    lock (targetProxy.ConcurrencyObject)
+                    {
+                        if (targetProxy.ProxyKeyDetailsList.All(i => i.Key != key))
+                        {
+                            var proxyKeyDetails = new ProxyKeyDetails(key, proxyLockTime);
+                            proxyKeyDetails.SetReserved();
+                            
+                            targetProxy.ProxyKeyDetailsList.Add(proxyKeyDetails);
+                            
+                            proxy = targetProxy;
+                        }
+                        else
+                        {
+                            var proxyDetails = targetProxy.ProxyKeyDetailsList.FirstOrDefault(i => i.Key == key);
+                            if (proxyDetails is {IsReserved: false, IsLocked: false})
+                            {
+                                proxyDetails.SetReserved();
+                                proxy = targetProxy;
+                            }
+                        }
 
-                    notCreatedProxyKeyDetailsForProxy.ProxyKeyDetailsList.Add(proxyKeyDetails);
-                    proxy = notCreatedProxyKeyDetailsForProxy;
-
-                    break;
+                        if (proxy != null)
+                        {
+                            break;
+                        }
+                    }
                 }
-
-                proxy = _proxyList.FirstOrDefault(x => x.ProxyKeyDetailsList.Any(i => i.Key == key && !i.IsLocked && !i.IsReserved));
-                proxy?.SetReserved(key);
                 
-                if ((DateTime.Now - timeStarted).Minutes > _settings.ProxyLimitTime.Minutes * 2)
-                    throw new NotFoundSteamFreeProxyException();
+                if (proxy == null)
+                {
+                    if ((DateTime.Now - timeStarted).Minutes > proxyLockTime.Minutes * 2)
+                        throw new NotFoundSteamFreeProxyException();
+                    
+                    await Task.Delay(proxyLockTime.Minutes);
+                }
                 
-                await Task.Delay(_settings.ProxyLimitTime.Minutes);
             } while (proxy == null);
             
             return proxy;
@@ -115,6 +135,13 @@ namespace SteamTrader.Core.Services.Proxy
 
     public class ProxyDetails : IDisposable
     {
+        public object ConcurrencyObject = new();
+        private readonly Dictionary<string, object> _concurrencyObjects = new()
+        {
+            [ProxyBalancer.SteamProxyKey] = new object(),
+            [ProxyBalancer.DMarketProxyKey] = new object()
+        };
+        
         public ProxyDetails(HttpClient httpClient, int proxyId)
         {
             HttpClient = httpClient;
@@ -126,31 +153,46 @@ namespace SteamTrader.Core.Services.Proxy
 
         public void SetReserved(string key)
         {
-            var proxyKeyDetails = FindProxyKeyDetails(key);
-            proxyKeyDetails.SetReserved();
+            lock (_concurrencyObjects[key])
+            {
+                var proxyKeyDetails = FindProxyKeyDetails(key);
+                proxyKeyDetails.SetReserved();
+            }
         }
         public void SetUnreserved(string key)
         {
-            var proxyKeyDetails = FindProxyKeyDetails(key);
-            proxyKeyDetails.SetUnReserved();
+            lock (_concurrencyObjects[key])
+            {
+                var proxyKeyDetails = FindProxyKeyDetails(key);
+                proxyKeyDetails.SetUnReserved();  
+            }
         }
         public void Lock(string key)
         {
-            var proxyKeyDetails = FindProxyKeyDetails(key);
-            proxyKeyDetails.Lock();
+            lock (_concurrencyObjects[key])
+            {
+                var proxyKeyDetails = FindProxyKeyDetails(key);
+                proxyKeyDetails.Lock(); 
+            }
         }
         public void Unlock(string key)
         {
-            var proxyKeyDetails = FindProxyKeyDetails(key);
-            proxyKeyDetails.Unlock();
+            lock (_concurrencyObjects[key])
+            {
+                var proxyKeyDetails = FindProxyKeyDetails(key);
+                proxyKeyDetails.Unlock();
+            }
         }
 
         private ProxyKeyDetails FindProxyKeyDetails(string key)
         {
-            var proxyKeyDetails = ProxyKeyDetailsList.FirstOrDefault(x => x.Key == key);
-            if (proxyKeyDetails == null)
-                throw new ArgumentException($"Не найден прокси кей элемент со значением {key}");
-            return proxyKeyDetails;
+            lock (_concurrencyObjects[key])
+            {
+                var proxyKeyDetails = ProxyKeyDetailsList.FirstOrDefault(x => x.Key == key);
+                if (proxyKeyDetails == null)
+                    throw new ArgumentException($"Не найден прокси кей элемент со значением {key}");
+                return proxyKeyDetails;
+            }
         }
         public void Dispose()
         {
@@ -161,38 +203,89 @@ namespace SteamTrader.Core.Services.Proxy
 
     public class ProxyKeyDetails
     {
+        private object ConcurrentObject { get; } = new();
         public ProxyKeyDetails(string key, TimeSpan limitTime)
         {
-            Key = key;
+            _key = key;
             LimitTime = limitTime;
         }
-        public string Key { get; }
+
+        public string Key
+        {
+            get
+            {
+                lock (ConcurrentObject)
+                {
+                    return _key;
+                }
+            }
+        }
+        private string _key;
+        
+        public bool IsLocked
+        {
+            get
+            {
+                lock (ConcurrentObject)
+                {
+                    return _isLocked;
+                }
+            }
+        }
+        private bool _isLocked;
+        
+        public bool IsReserved
+        {
+            get
+            {
+                lock (ConcurrentObject)
+                {
+                    return _isReserved;
+                }
+            }
+        }
+        private bool _isReserved;
+
         public TimeSpan LimitTime { get; }
 
         public DateTime LastLimitTime { get; set; }
-        public bool IsLocked { get; set; }
-        public bool IsReserved { get; set; }
+
+
 
         public void SetReserved()
         {
-            IsReserved = true;
+            lock (ConcurrentObject)
+            {
+                if (_isReserved)
+                    throw new ArgumentException("Proxy was already reserved!");
+                _isReserved = true;
+            }
         }
         public void SetUnReserved()
         {
-            IsReserved = false;
+            lock (ConcurrentObject)
+            {
+                _isReserved = false;
+            }
         }
         
         public void Unlock()
         {
-            IsLocked = false;
-            IsReserved = false;
+            lock (ConcurrentObject)
+            {
+                _isLocked = false;
+                _isReserved = false;
+            }
         }
 
         public void Lock()
         {
-            IsLocked = true;
-            IsReserved = false;
-            LastLimitTime = DateTime.Now;
+            lock (ConcurrentObject)
+            {
+                _isLocked = true;
+                _isReserved = false;
+                LastLimitTime = DateTime.Now;
+            }
         }
 
         public void TryUnlock()

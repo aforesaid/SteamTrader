@@ -12,6 +12,7 @@ using SteamTrader.Core.Helpers;
 using SteamTrader.Core.Services.ApiClients.DMarket.Requests.GetBalance;
 using SteamTrader.Core.Services.ApiClients.DMarket.Requests.GetItems;
 using SteamTrader.Core.Services.ApiClients.DMarket.Requests.GetLastSales;
+using SteamTrader.Core.Services.ApiClients.Exceptions;
 using SteamTrader.Core.Services.Proxy;
 
 namespace SteamTrader.Core.Services.ApiClients.DMarket
@@ -42,16 +43,16 @@ namespace SteamTrader.Core.Services.ApiClients.DMarket
                     try
                     {
                         var response = await proxy.HttpClient.GetAsync(uri);
-                        
-                        if (response.StatusCode is HttpStatusCode.TooManyRequests or HttpStatusCode.Forbidden or HttpStatusCode.BadGateway)
+
+                        if (response.StatusCode is HttpStatusCode.TooManyRequests or HttpStatusCode.Forbidden or
+                            HttpStatusCode.BadGateway)
                         {
-                            proxy.Lock(ProxyBalancer.DMarketProxyKey);
-                            return await GetMarketplaceItems(gameId, balance: balance, title: title, cursor: cursor, retryCount: retryCount);
+                            throw new TooManyRequestsException();
                         }
 
                         if (!response.IsSuccessStatusCode)
                             return null;
-                            
+
                         var responseString = await response.Content.ReadAsStringAsync();
 
                         var result = JsonConvert.DeserializeObject<ApiGetOffersResponse>(responseString);
@@ -61,8 +62,13 @@ namespace SteamTrader.Core.Services.ApiClients.DMarket
                             result.Objects = result.Objects.Where(x => x.Title == title)
                                 .ToArray();
                         }
-                        
+
                         return result;
+                    }
+                    catch (TooManyRequestsException)
+                    {
+                        proxy.Lock(ProxyBalancer.DMarketProxyKey);
+                        proxy = await _proxyBalancer.GetFreeProxy(ProxyBalancer.DMarketProxyKey);
                     }
                     catch (Exception)
                     {
@@ -70,7 +76,10 @@ namespace SteamTrader.Core.Services.ApiClients.DMarket
                         currentRetryCount++;
 
                         if (retryCount <= currentRetryCount)
+                        {
+                            proxy.Lock(ProxyBalancer.DMarketProxyKey);
                             throw;
+                        }
                     }
                 } while (currentRetryCount < retryCount);
                 return null;
@@ -118,8 +127,7 @@ namespace SteamTrader.Core.Services.ApiClients.DMarket
                         
                         if (response.StatusCode is HttpStatusCode.TooManyRequests or HttpStatusCode.Forbidden or HttpStatusCode.BadGateway)
                         {
-                            proxy.Lock(ProxyBalancer.DMarketProxyKey);
-                            return await GetRecommendedOffers(gameId, marketplaceName);
+                            throw new TooManyRequestsException();
                         }
 
                         if (!response.IsSuccessStatusCode)
@@ -129,6 +137,11 @@ namespace SteamTrader.Core.Services.ApiClients.DMarket
 
                         var result = JsonConvert.DeserializeObject<ApiGetOffersResponse>(responseString);
                         return result;
+                    }
+                    catch (TooManyRequestsException)
+                    {
+                        proxy.Lock(ProxyBalancer.DMarketProxyKey);
+                        proxy = await _proxyBalancer.GetFreeProxy(ProxyBalancer.DMarketProxyKey);
                     }
                     catch (Exception)
                     {
@@ -165,8 +178,7 @@ namespace SteamTrader.Core.Services.ApiClients.DMarket
 
                         if (response.StatusCode is HttpStatusCode.TooManyRequests or HttpStatusCode.Forbidden or HttpStatusCode.BadGateway)
                         {
-                            proxy.Lock(ProxyBalancer.DMarketProxyKey);
-                            return await GetLastSales(gameId, name);
+                            throw new TooManyRequestsException();
                         }
 
                         if (!response.IsSuccessStatusCode)
@@ -176,6 +188,11 @@ namespace SteamTrader.Core.Services.ApiClients.DMarket
                         var result = JsonConvert.DeserializeObject<ApiGetLastSalesResponse>(responseString);
                        
                         return result;
+                    }
+                    catch (TooManyRequestsException)
+                    {
+                        proxy.Lock(ProxyBalancer.DMarketProxyKey);
+                        proxy = await _proxyBalancer.GetFreeProxy(ProxyBalancer.DMarketProxyKey);
                     }
                     catch (Exception)
                     {
@@ -231,4 +248,5 @@ namespace SteamTrader.Core.Services.ApiClients.DMarket
             _proxyBalancer?.Dispose();
         }
     }
+
 }
