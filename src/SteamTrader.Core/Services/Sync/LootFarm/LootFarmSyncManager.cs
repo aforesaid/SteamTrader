@@ -122,13 +122,15 @@ namespace SteamTrader.Core.Services.Sync.LootFarm
                 await semaphore.WaitAsync();
                 try
                 {
-                    var offers = await _dMarketApiClient.GetCurrentOffers(gameId, x.Name);
+                    var offers = await _dMarketApiClient.GetMarketplaceItems(gameId, title: x.Name);
                     var filteredOffers = offers.Objects.Where(i => i.Extra.TradeLock <= _settings.DMarketSettings.MaxTradeBan);
                     
                     if (filteredOffers.Any())
                     {
-                        var offer = filteredOffers.First();
-                        await HandleDMarketToLootFarm(offer, x, gameId);
+                        var offerMinPrice = filteredOffers.Min(i => long.Parse(i.Price.Usd));
+                        var offerWithMinPrice = filteredOffers.First(i => long.Parse(i.Price.Usd) == offerMinPrice);
+                        
+                        await HandleDMarketToLootFarm(offerWithMinPrice, x, gameId);
                     }
                 }
                 catch (Exception ex)

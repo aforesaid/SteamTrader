@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
@@ -26,13 +27,13 @@ namespace SteamTrader.Core.Services.ApiClients.DMarket
             _dMarketSettings = settings.Value.DMarketSettings;
         }
 
-        public async Task<ApiGetOffersResponse> GetMarketplaceItems(string gameId, decimal balance, string cursor = null, int retryCount = 5)
+        public async Task<ApiGetOffersResponse> GetMarketplaceItems(string gameId, decimal balance = default, string cursor = null, string title = null, int retryCount = 5)
         {
             var proxy = await _proxyBalancer.GetFreeProxy(ProxyBalancer.DMarketProxyKey);
 
             try
             {
-                var uri = DMarketEndpoints.BaseUrl + DMarketEndpoints.GetMarketplaceItems(gameId, balance, cursor);
+                var uri = DMarketEndpoints.BaseUrl + DMarketEndpoints.GetMarketplaceItems(gameId, title: title, priceTo: balance, cursor: cursor);
 
                 var currentRetryCount = 0;
                 
@@ -45,7 +46,7 @@ namespace SteamTrader.Core.Services.ApiClients.DMarket
                         if (response.StatusCode is HttpStatusCode.TooManyRequests or HttpStatusCode.Forbidden or HttpStatusCode.BadGateway)
                         {
                             proxy.Lock(ProxyBalancer.DMarketProxyKey);
-                            return await GetMarketplaceItems(gameId, balance, cursor);
+                            return await GetMarketplaceItems(gameId, balance: balance, title: title, cursor: cursor, retryCount: retryCount);
                         }
 
                         if (!response.IsSuccessStatusCode)
@@ -54,6 +55,13 @@ namespace SteamTrader.Core.Services.ApiClients.DMarket
                         var responseString = await response.Content.ReadAsStringAsync();
 
                         var result = JsonConvert.DeserializeObject<ApiGetOffersResponse>(responseString);
+
+                        if (!string.IsNullOrWhiteSpace(title))
+                        {
+                            result.Objects = result.Objects.Where(x => x.Title == title)
+                                .ToArray();
+                        }
+                        
                         return result;
                     }
                     catch (Exception)
@@ -93,7 +101,7 @@ namespace SteamTrader.Core.Services.ApiClients.DMarket
             }
         }
 
-        public async Task<ApiGetOffersResponse> GetCurrentOffers(string gameId, string marketplaceName, int retryCount = 5)
+        public async Task<ApiGetOffersResponse> GetRecommendedOffers(string gameId, string marketplaceName, int retryCount = 5)
         {
             var proxy = await _proxyBalancer.GetFreeProxy(ProxyBalancer.DMarketProxyKey);
             try
@@ -111,7 +119,7 @@ namespace SteamTrader.Core.Services.ApiClients.DMarket
                         if (response.StatusCode is HttpStatusCode.TooManyRequests or HttpStatusCode.Forbidden or HttpStatusCode.BadGateway)
                         {
                             proxy.Lock(ProxyBalancer.DMarketProxyKey);
-                            return await GetCurrentOffers(gameId, marketplaceName);
+                            return await GetRecommendedOffers(gameId, marketplaceName);
                         }
 
                         if (!response.IsSuccessStatusCode)

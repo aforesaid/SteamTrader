@@ -74,13 +74,13 @@ namespace SteamTrader.Core.Services.Sync.DMarket
                         if (enabledBalanceFilter)
                         {
                             var balanceDetails = await _dMarketApiClient.GetBalance();
-                            var currentBalance = decimal.Parse(balanceDetails.Usd);
+                            var currentBalance = long.Parse(balanceDetails.Usd);
                             
-                            response = await _dMarketApiClient.GetMarketplaceItems(gameId, currentBalance, cursor);
+                            response = await _dMarketApiClient.GetMarketplaceItems(gameId, balance: currentBalance, cursor : cursor);
                         }
                         else
                         {
-                            response = await _dMarketApiClient.GetMarketplaceItems(gameId, 0, cursor);
+                            response = await _dMarketApiClient.GetMarketplaceItems(gameId, cursor: cursor);
                         }
                         
                         if (response?.Objects == null)
