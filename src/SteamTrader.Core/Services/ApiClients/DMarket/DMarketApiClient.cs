@@ -69,7 +69,7 @@ namespace SteamTrader.Core.Services.ApiClients.DMarket
                         await Task.Delay(3000);
                         currentRetryCount++;
 
-                        if (retryCount < currentRetryCount)
+                        if (retryCount <= currentRetryCount)
                             throw;
                     }
                 } while (currentRetryCount < retryCount);
@@ -135,7 +135,7 @@ namespace SteamTrader.Core.Services.ApiClients.DMarket
                         await Task.Delay(3000);
                         currentRetryCount++;
 
-                        if (retryCount < currentRetryCount)
+                        if (retryCount <= currentRetryCount)
                             throw;
                     }
                 } while (currentRetryCount < retryCount);
@@ -182,7 +182,7 @@ namespace SteamTrader.Core.Services.ApiClients.DMarket
                         await Task.Delay(3000);
                         currentRetryCount++;
 
-                        if (retryCount < currentRetryCount)
+                        if (retryCount <= currentRetryCount)
                             throw;
                     }
                 } while (currentRetryCount < retryCount);
