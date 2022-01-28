@@ -90,11 +90,11 @@ namespace SteamTrader.Core.Services.Sync.LootFarm
                 itemsForTradeToLootFarm = itemsForTradeToLootFarm.Where(x => x.Price <= long.Parse(dMarketBalance.Usd));
                 
                 //допилить получение баланса аккаунта loot farm
-                itemsForTradeToDMarket = itemsForTradeToLootFarm.Where(x => x.Price <= long.Parse(dMarketBalance.Usd));
+                itemsForTradeToDMarket = itemsForTradeToDMarket.Where(x => x.Price <= long.Parse(dMarketBalance.Usd));
             }
             
-            _logger.LogInformation("{0}: Найдено айтемов на LootFarm {1}, начинаю сравнение с DMarket-ом",
-                nameof(LootFarmSyncManager), items.Length);
+            _logger.LogInformation("{0}: Найдено айтемов на LootFarm  для синка DMarket - LootFarm {1}, LootFarm - DMarket {2}, начинаю сравнение с DMarket-ом",
+                nameof(LootFarmSyncManager), itemsForTradeToLootFarm.Count(), itemsForTradeToDMarket.Count());
             
             using var semaphore = new SemaphoreSlim(10);
             var tasksToDMarket = itemsForTradeToDMarket.Select(async x =>

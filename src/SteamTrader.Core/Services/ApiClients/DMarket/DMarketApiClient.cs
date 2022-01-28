@@ -102,7 +102,7 @@ namespace SteamTrader.Core.Services.ApiClients.DMarket
             var proxy = await _proxyBalancer.GetFreeProxy(ProxyBalancer.DMarketProxyKey);
             try
             {
-                var uri = DMarketEndpoints.BaseUrl + DMarketEndpoints.GetBalance;
+                var uri = DMarketEndpoints.GetBalance;
 
                 var requestMessage = CreateRequestMessage<string>(uri, HttpMethod.Get, false);
                 var response = await proxy.HttpClient.SendAsync(requestMessage);
