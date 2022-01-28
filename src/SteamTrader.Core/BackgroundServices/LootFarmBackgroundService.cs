@@ -35,7 +35,7 @@ namespace SteamTrader.Core.BackgroundServices
         {
             try
             {
-                await _syncManager.SyncForBuyFromLootFarmToSaleOnDMarket();
+                await _syncManager.SyncForBuyFromLootFarmToSaleOnDMarket(true);
             }
             catch (Exception e)
             {

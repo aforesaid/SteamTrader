@@ -41,7 +41,7 @@ namespace SteamTrader.Core.Services.Sync.LootFarm
             _serviceProvider = serviceProvider;
         }
 
-        public async Task SyncForBuyFromLootFarmToSaleOnDMarket()
+        public async Task SyncForBuyFromLootFarmToSaleOnDMarket(bool enabledBalanceFilter = false)
         {
             if (IsSyncingNow)
             {
@@ -56,7 +56,7 @@ namespace SteamTrader.Core.Services.Sync.LootFarm
             {
                 foreach (var gameName in _settings.LootFarmSettings.LootFarmToDMarketSyncingGames)
                 {
-                    await HandleGame(gameName);
+                    await HandleGame(gameName, enabledBalanceFilter);
                 }
             }
             finally
@@ -65,7 +65,7 @@ namespace SteamTrader.Core.Services.Sync.LootFarm
             }
         }
         
-        private async Task HandleGame(string gameId)
+        private async Task HandleGame(string gameId, bool enabledBalanceFilter = false)
         {
             _logger.LogInformation("{0}: Начинаю синхронизацию по выводу из LootFarm-a на DMarket, игра {1}",
                 nameof(LootFarmSyncManager), gameId);
@@ -79,9 +79,19 @@ namespace SteamTrader.Core.Services.Sync.LootFarm
                 "9a92" => await _lootFarmApiClient.GetPricesForDota2(),
                 _ => throw new NotSupportedException($"Указан не поддерживаемый тип игры для синхронизации в сервисе {nameof(LootFarmSyncManager)}")
             };
+            var elements = items.Where(x => x.Price >= _settings.LootFarmSettings.MinPriceInUsd);
+            var dMarketBalance = await _dMarketApiClient.GetBalance();
+            
+            var itemsForTradeToDMarket = elements.Where(x => x.Tr > 0);
+            var itemsForTradeToLootFarm = elements.Where(x => x.Have < x.Max);
 
-            var itemsForTradeToDMarket = items.Where(x => x.Tr > 0);
-            var itemsForTradeToLootFarm = items.Where(x => x.Have < x.Max);
+            if (enabledBalanceFilter)
+            {
+                itemsForTradeToLootFarm = itemsForTradeToLootFarm.Where(x => x.Price <= long.Parse(dMarketBalance.Usd));
+                
+                //допилить получение баланса аккаунта loot farm
+                itemsForTradeToDMarket = itemsForTradeToLootFarm.Where(x => x.Price <= long.Parse(dMarketBalance.Usd));
+            }
             
             _logger.LogInformation("{0}: Найдено айтемов на LootFarm {1}, начинаю сравнение с DMarket-ом",
                 nameof(LootFarmSyncManager), items.Length);
