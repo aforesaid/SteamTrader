@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using SteamTrader.Core.Services;
+using SteamTrader.Domain.Enums;
 
 namespace SteamTrader.API.Controllers
 {
@@ -21,11 +22,12 @@ namespace SteamTrader.API.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetTradeOffers([FromQuery] int? take, [FromQuery] int? skip)
+        public async Task<IActionResult> GetTradeOffers([FromQuery] OfferSourceEnum? from, [FromQuery] OfferSourceEnum? to,
+            [FromQuery] int? take, [FromQuery] int? skip)
         {
             try
             {
-                var items = await _tradeOffersService.GetTradeOffers(take, skip);
+                var items = await _tradeOffersService.GetTradeOffers(from, to, take, skip);
                 return Ok(items);
             }
             catch (Exception e)

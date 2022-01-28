@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using SteamTrader.Domain.Enums;
 using SteamTrader.Infrastructure.Data;
 
 namespace SteamTrader.Core.Services
@@ -19,10 +20,16 @@ namespace SteamTrader.Core.Services
             _dbContext = dbContext;
         }
 
-        public async Task<TradeOfferDto[]> GetTradeOffers(int? skip, int? take)
+        public async Task<TradeOfferDto[]> GetTradeOffers(OfferSourceEnum? from, OfferSourceEnum? to, int? skip, int? take)
         {
-            var existItems = await _dbContext.TradeOffers
-                .AsQueryable()
+            var q = _dbContext.TradeOffers.AsQueryable();
+
+            if (from.HasValue)
+                q = q.Where(x => x.From == from);
+            if (to.HasValue)
+                q = q.Where(x => x.To == to);
+            
+            var existItems = await q
                 .OrderByDescending(x => x.DateTime)
                 .Skip(skip ?? 0)
                 .Take(take ?? 100)
