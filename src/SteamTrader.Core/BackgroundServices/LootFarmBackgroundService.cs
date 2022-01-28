@@ -11,19 +11,19 @@ namespace SteamTrader.Core.BackgroundServices
     public class LootFarmBackgroundService : IHostedService, IDisposable
     {
         private readonly ILogger<LootFarmBackgroundService> _logger;
-        private readonly IServiceProvider _serviceProvider;
+        private readonly LootFarmSyncManager _syncManager;
         private Timer _timer = null!;
 
         public LootFarmBackgroundService(ILogger<LootFarmBackgroundService> logger,
-            IServiceProvider serviceProvider)
+            LootFarmSyncManager syncManager)
         {
             _logger = logger;
-            _serviceProvider = serviceProvider;
+            _syncManager = syncManager;
         }
 
         public Task StartAsync(CancellationToken stoppingToken)
         {
-            _logger.LogInformation("{0} service running", nameof(DMarketToSteamBackgroundService));
+            _logger.LogInformation("{0} service running", nameof(LootFarmBackgroundService));
 
             _timer = new Timer(DoWork, null, TimeSpan.Zero, 
                 TimeSpan.FromHours(4));
@@ -35,9 +35,7 @@ namespace SteamTrader.Core.BackgroundServices
         {
             try
             {
-                using var scope = _serviceProvider.CreateScope();
-                var lootFarmSyncManager = scope.ServiceProvider.GetRequiredService<LootFarmSyncManager>();
-                await lootFarmSyncManager.SyncForBuyFromLootFarmToSaleOnDMarket();
+                await _syncManager.SyncForBuyFromLootFarmToSaleOnDMarket();
             }
             catch (Exception e)
             {
@@ -48,7 +46,7 @@ namespace SteamTrader.Core.BackgroundServices
         public Task StopAsync(CancellationToken stoppingToken)
         {
             _logger.LogInformation("{0} is stopping",
-                nameof(DMarketToSteamBackgroundService));
+                nameof(LootFarmBackgroundService));
 
             _timer?.Change(Timeout.Infinite, 0);
 

@@ -7,7 +7,6 @@
   <ItemGroup>
     <ProjectReference Include="..\SteamTrader.Infrastructure.Data\SteamTrader.Infrastructure.Data.csproj" />
     <ProjectReference Include="..\SteamTrader.Source\SteamTrader.Source.csproj" />
-    <Folder Include="Services\ApiClients" />
   </ItemGroup>
 
   <ItemGroup>
