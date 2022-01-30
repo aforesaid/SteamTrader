@@ -182,18 +182,26 @@ namespace SteamTrader.Core.Services.Sync.DMarket
         }
         private async Task HandleItemBuyInSteamSaleInDMarket(decimal minSteamPrice, decimal sellPrice, string title, string gameId)
         {
-            var profit = sellPrice * (1 - _settings.DMarketSettings.SaleCommissionPercent / 100) -
-                         minSteamPrice;
-            var margin = profit / minSteamPrice;
-            if (margin > -0.3M)
+            var dMarketDetails = await _dMarketApiClient.GetLastSales(gameId, title);
+            var countLastSales = dMarketDetails.LastSales
+                .Count(i => DateTimeOffset.FromUnixTimeSeconds(i.Date) > DateTime.Today.AddDays(-2));
+
+            if (countLastSales >= _settings.DMarketSettings.NeededQtySalesForTwoDays)
             {
-                using var scope = _serviceProvider.CreateScope();
-                var dbContext = scope.ServiceProvider.GetRequiredService<SteamTraderDbContext>();
-                
-                var newTradeOffer = new TradeOfferEntity(OfferSourceEnum.Steam, OfferSourceEnum.DMarket, sellPrice,
-                    minSteamPrice, margin, gameId, title);
-                await dbContext.TradeOffers.AddAsync(newTradeOffer);
-                await dbContext.SaveChangesAsync();
+                var profit = sellPrice * (1 - _settings.DMarketSettings.SaleCommissionPercent / 100) -
+                             minSteamPrice;
+                var margin = profit / minSteamPrice;
+                if (margin > -0.3M)
+                {
+                    using var scope = _serviceProvider.CreateScope();
+                    var dbContext = scope.ServiceProvider.GetRequiredService<SteamTraderDbContext>();
+
+                    var newTradeOffer = new TradeOfferEntity(OfferSourceEnum.Steam, OfferSourceEnum.DMarket,
+                        minSteamPrice,
+                        sellPrice, margin, gameId, title);
+                    await dbContext.TradeOffers.AddAsync(newTradeOffer);
+                    await dbContext.SaveChangesAsync();
+                }
             }
         }
     }
