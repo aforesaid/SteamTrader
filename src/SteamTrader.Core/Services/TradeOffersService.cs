@@ -20,7 +20,7 @@ namespace SteamTrader.Core.Services
             _dbContext = dbContext;
         }
 
-        public async Task<TradeOfferDto[]> GetTradeOffers(OfferSourceEnum? from, OfferSourceEnum? to, int? skip, int? take)
+        public async Task<TradeOfferDto[]> GetTradeOffers(OfferSourceEnum? from, OfferSourceEnum? to, string gameId, int? skip, int? take)
         {
             var q = _dbContext.TradeOffers.AsQueryable();
 
@@ -28,6 +28,8 @@ namespace SteamTrader.Core.Services
                 q = q.Where(x => x.From == from);
             if (to.HasValue)
                 q = q.Where(x => x.To == to);
+            if (gameId != null)
+                q = q.Where(x => x.GameId == gameId);
             
             var existItems = await q
                 .OrderByDescending(x => x.DateTime)

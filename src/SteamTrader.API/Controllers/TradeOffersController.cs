@@ -22,12 +22,12 @@ namespace SteamTrader.API.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetTradeOffers([FromQuery] OfferSourceEnum? from, [FromQuery] OfferSourceEnum? to,
+        public async Task<IActionResult> GetTradeOffers([FromQuery] OfferSourceEnum? from, [FromQuery] OfferSourceEnum? to, [FromQuery] string gameId,
             [FromQuery] int? take, [FromQuery] int? skip)
         {
             try
             {
-                var items = await _tradeOffersService.GetTradeOffers(from, to, take, skip);
+                var items = await _tradeOffersService.GetTradeOffers(from, to, gameId, take, skip);
                 return Ok(items);
             }
             catch (Exception e)
