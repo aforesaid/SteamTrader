@@ -193,6 +193,8 @@ namespace SteamTrader.Core.Services.Sync.LootFarm
 
             if (margin >= _settings.DMarketSettings.TargetMarginPercentForSaleOnLootFarm / 100)
             {
+                await _dMarketApiClient.BuyOffer(dmarketOffer.Extra.OfferId, targetPrice);
+                
                 using var scope = _serviceProvider.CreateScope();
                 var dbContext = scope.ServiceProvider.GetRequiredService<SteamTraderDbContext>();
                 

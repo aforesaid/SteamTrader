@@ -12,6 +12,7 @@ using SteamTrader.Core.Helpers;
 using SteamTrader.Core.Services.ApiClients.DMarket.Requests.GetBalance;
 using SteamTrader.Core.Services.ApiClients.DMarket.Requests.GetItems;
 using SteamTrader.Core.Services.ApiClients.DMarket.Requests.GetLastSales;
+using SteamTrader.Core.Services.ApiClients.DMarket.Requests.PatchBuyOrder;
 using SteamTrader.Core.Services.ApiClients.Exceptions;
 using SteamTrader.Core.Services.Proxy;
 
@@ -211,6 +212,29 @@ namespace SteamTrader.Core.Services.ApiClients.DMarket
                     }
                 } while (currentRetryCount < retryCount);
                 return null;
+            }
+            finally
+            {
+                proxy.SetUnreserved(ProxyBalancer.DMarketProxyKey);
+            }
+        }
+
+        public async Task BuyOffer(Guid offerId, long amount)
+        {
+            var proxy = await _proxyBalancer.GetFreeProxy(ProxyBalancer.DMarketProxyKey);
+            try
+            {
+                var uri = DMarketEndpoints.PatchBuyOffer;
+
+                var body = new ApiPatchBuyOrderRequest(
+                    new[]
+                    {
+                        new ApiPatchBuyOrderItem(offerId, amount)
+                    });
+
+                var request = CreateRequestMessage(uri, HttpMethod.Patch, true, body);
+                var response = await proxy.HttpClient.SendAsync(request);
+                var responseString = await response.Content.ReadAsStringAsync();
             }
             finally
             {
