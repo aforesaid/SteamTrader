@@ -78,14 +78,14 @@ namespace SteamTrader.Core.Services.Sync.DMarket
                 "9a92" => await _lootFarmApiClient.GetPricesForDota2(),
                 _ => throw new NotSupportedException($"Указан не поддерживаемый тип игры для синхронизации в сервисе {nameof(DMarketToLootFarmSyncManager)}")
             };
-            var elements = items.Where(x => x.GetPrice >= _settings.LootFarmSettings.MinPriceInUsd);
+            var elements = items.Where(x => x.Price >= _settings.LootFarmSettings.MinPriceInUsd);
             var dMarketBalance = await _dMarketApiClient.GetBalance();
             
             var itemsForTradeToLootFarm = elements.Where(x => x.Have < x.Max);
 
             if (enabledBalanceFilter)
             {
-                itemsForTradeToLootFarm = itemsForTradeToLootFarm.Where(x => x.GetPrice <= long.Parse(dMarketBalance.Usd));
+                itemsForTradeToLootFarm = itemsForTradeToLootFarm.Where(x => x.Price <= long.Parse(dMarketBalance.Usd));
             }
 
             using var semaphore = new SemaphoreSlim(10);
@@ -131,7 +131,7 @@ namespace SteamTrader.Core.Services.Sync.DMarket
         {
             var targetPrice = long.Parse(dmarketOffer.Price.Usd);
 
-            var profit = x.GetPrice * (1 - _settings.LootFarmSettings.SaleCommissionPercent / 100) - targetPrice;
+            var profit = x.Price * (1 - _settings.LootFarmSettings.SaleCommissionPercent / 100) - targetPrice;
             var margin = profit / targetPrice;
 
             if (margin >= _settings.DMarketSettings.TargetMarginPercentForSaleOnLootFarm / 100)
@@ -142,7 +142,7 @@ namespace SteamTrader.Core.Services.Sync.DMarket
                 var dbContext = scope.ServiceProvider.GetRequiredService<SteamTraderDbContext>();
                 
                 var newTradeOffer = new TradeOfferEntity(OfferSourceEnum.DMarket, OfferSourceEnum.LootFarm,
-                    (decimal) targetPrice / 100, (decimal) x.GetPrice / 100, margin, gameId, x.Name);
+                    (decimal) targetPrice / 100, (decimal) x.Price / 100, margin, gameId, x.Name);
                 await dbContext.TradeOffers.AddAsync(newTradeOffer);
                 await dbContext.SaveChangesAsync();
             }
