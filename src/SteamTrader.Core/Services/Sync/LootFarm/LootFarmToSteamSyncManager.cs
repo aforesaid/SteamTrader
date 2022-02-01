@@ -79,7 +79,7 @@ namespace SteamTrader.Core.Services.Sync.LootFarm
             };
             var elements = items.Where(x => x.Price >= _settings.LootFarmSettings.MinPriceInUsd);
             
-            var itemsForTradeToSteam = elements.Where(x => x.Tr > 0 || gameId == "tf2");
+            var itemsForTradeToSteam = elements.Where(x => x.Have > 0 && (x.Tr > 0 || gameId == "tf2"));
             _logger.LogInformation(
                 "{0}: Найдено айтемов на LootFarm  для синка LootFarm - Steam {1}, начинаю синхронизацию",
                 nameof(LootFarmToSteamSyncManager), itemsForTradeToSteam.Count());
