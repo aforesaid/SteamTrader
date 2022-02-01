@@ -3,18 +3,18 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using SteamTrader.Core.Services.Sync.LootFarm;
+using SteamTrader.Core.Services.Sync.DMarket;
 
 namespace SteamTrader.Core.BackgroundServices
 {
-    public class LootFarmBackgroundService : IHostedService, IDisposable
+    public class DMarketToLootFarmBackgroundService : IHostedService, IDisposable
     {
-        private readonly ILogger<LootFarmBackgroundService> _logger;
-        private readonly LootFarmSyncManager _syncManager;
+        private readonly ILogger<DMarketToLootFarmBackgroundService> _logger;
+        private readonly DMarketToLootFarmSyncManager _syncManager;
         private Timer _timer = null!;
 
-        public LootFarmBackgroundService(ILogger<LootFarmBackgroundService> logger,
-            LootFarmSyncManager syncManager)
+        public DMarketToLootFarmBackgroundService(ILogger<DMarketToLootFarmBackgroundService> logger,
+            DMarketToLootFarmSyncManager syncManager)
         {
             _logger = logger;
             _syncManager = syncManager;
@@ -22,7 +22,7 @@ namespace SteamTrader.Core.BackgroundServices
 
         public Task StartAsync(CancellationToken stoppingToken)
         {
-            _logger.LogInformation("{0} service running", nameof(LootFarmBackgroundService));
+            _logger.LogInformation("{0} service running", nameof(DMarketToLootFarmBackgroundService));
 
             _timer = new Timer(DoWork, null, TimeSpan.Zero, 
                 TimeSpan.FromMinutes(3));
@@ -34,7 +34,7 @@ namespace SteamTrader.Core.BackgroundServices
         {
             try
             {
-                await _syncManager.SyncForBuyFromLootFarmToSaleOnDMarket(true);
+                await _syncManager.Sync(true);
             }
             catch (Exception e)
             {
@@ -45,7 +45,7 @@ namespace SteamTrader.Core.BackgroundServices
         public Task StopAsync(CancellationToken stoppingToken)
         {
             _logger.LogInformation("{0} is stopping",
-                nameof(LootFarmBackgroundService));
+                nameof(DMarketToLootFarmBackgroundService));
 
             _timer?.Change(Timeout.Infinite, 0);
 

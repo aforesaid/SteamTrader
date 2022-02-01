@@ -42,8 +42,10 @@ namespace SteamTrader.Core.Configuration
     public class LootFarmSettings
     {
         public string[] LootFarmToDMarketSyncingGames { get; set; }
+        public string[] LootFarmToSteamSyncingGames { get; set; }
+
         public decimal SaleCommissionPercent { get; set; }
-        public decimal TargetMarginPercentForSaleOnDMarket { get; set; }
+        public decimal TargetMarginPercentForSaleOnSteam { get; set; }
         public long MinPriceInUsd { get; set; }
     }
 

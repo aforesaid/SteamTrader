@@ -24,10 +24,12 @@ namespace SteamTrader.API.Extensions
             
             services.AddSingleton<ProxyBalancer>();
             services.AddSingleton<DMarketToSteamSyncManager>();
-            services.AddSingleton<LootFarmSyncManager>();
-            
-            services.AddHostedService<DMarketToSteamBackgroundService>();
-            services.AddHostedService<LootFarmBackgroundService>();
+            services.AddSingleton<DMarketToLootFarmSyncManager>();
+            services.AddSingleton<LootFarmToSteamSyncManager>();
+
+            //services.AddHostedService<DMarketToSteamBackgroundService>();
+            services.AddHostedService<DMarketToLootFarmBackgroundService>();
+            services.AddHostedService<LootFarmToSteamBackgroundService>();
         }
     }
 }
