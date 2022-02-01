@@ -6,9 +6,11 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using SteamTrader.Core.Configuration;
+using SteamTrader.Core.Services.ApiClients.DMarket.Requests.GetLastSales;
 using SteamTrader.Core.Services.ApiClients.LootFarm;
 using SteamTrader.Core.Services.ApiClients.LootFarm.GetActualPrices;
 using SteamTrader.Core.Services.ApiClients.Steam;
+using SteamTrader.Core.Services.ApiClients.Steam.Requests;
 using SteamTrader.Domain.Entities;
 using SteamTrader.Domain.Enums;
 using SteamTrader.Infrastructure.Data;
@@ -92,11 +94,13 @@ namespace SteamTrader.Core.Services.Sync.LootFarm
                 await semaphore.WaitAsync();
                 try
                 {
-                    await HandleLootFarmToSteam(x, gameId);
+                    var steamDetails = await _steamApiClient.GetSalesForItem(x.Name, gameId);
+                    
+                    await HandleLootFarmToSteam(steamDetails, x, gameId);
 
                     if (x.Have < x.Max)
                     {
-                        await HandleSteamToLootFarm(x, gameId);
+                        await HandleSteamToLootFarm(steamDetails, x, gameId);
                     }
                 }
                 catch (Exception ex)
@@ -116,10 +120,8 @@ namespace SteamTrader.Core.Services.Sync.LootFarm
                 nameof(LootFarmToSteamSyncManager), gameId);
         }
         
-        private async Task HandleLootFarmToSteam(GetActualPricesItem x, string gameId)
+        private async Task HandleLootFarmToSteam(ApiGetSalesForItemResponse steamDetails, GetActualPricesItem x, string gameId)
         {
-            var steamDetails = await _steamApiClient.GetSalesForItem(x.Name, gameId);
-            
             if (steamDetails is not
                 {
                     Success: true,
@@ -145,10 +147,8 @@ namespace SteamTrader.Core.Services.Sync.LootFarm
                 await dbContext.SaveChangesAsync();
             }
         }
-        private async Task HandleSteamToLootFarm(GetActualPricesItem x, string gameId)
+        private async Task HandleSteamToLootFarm(ApiGetSalesForItemResponse steamDetails, GetActualPricesItem x, string gameId)
         {
-            var steamDetails = await _steamApiClient.GetSalesForItem(x.Name, gameId);
-            
             if (steamDetails is not
                 {
                     Success: true,
