@@ -25,7 +25,7 @@ namespace SteamTrader.Core.BackgroundServices
             _logger.LogInformation("{0} service running", nameof(LootFarmToSteamBackgroundService));
 
             _timer = new Timer(DoWork, null, TimeSpan.Zero, 
-                TimeSpan.FromMinutes(30));
+                TimeSpan.FromMinutes(15));
 
             return Task.CompletedTask;
         }
