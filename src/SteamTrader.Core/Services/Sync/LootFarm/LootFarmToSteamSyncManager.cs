@@ -78,7 +78,7 @@ namespace SteamTrader.Core.Services.Sync.LootFarm
                 "9a92" => await _lootFarmApiClient.GetPricesForDota2(),
                 _ => throw new NotSupportedException($"Указан не поддерживаемый тип игры для синхронизации в сервисе {nameof(LootFarmToSteamSyncManager)}")
             };
-            var elements = items.Where(x => x.Price >= _settings.LootFarmSettings.MinPriceInUsd);
+            var elements = items.Where(x => x.GetPrice >= _settings.LootFarmSettings.MinPriceInUsd);
             
             var itemsForTradeToSteam = elements.Where(x => x.Have > 0 && (x.Tr > 0 || gameId == "tf2"));
             _logger.LogInformation(
@@ -94,7 +94,7 @@ namespace SteamTrader.Core.Services.Sync.LootFarm
                 try
                 {
                     var steamDetails = await _steamApiClient.GetSalesForItem(x.Name, gameId);
-                    
+
                     await HandleLootFarmToSteam(steamDetails, x, gameId);
 
                     if (x.Have < x.Max)
@@ -131,8 +131,8 @@ namespace SteamTrader.Core.Services.Sync.LootFarm
             
             var minSteamPrice = Math.Min(steamDetails.LowestPriceValue.Value,
                 steamDetails.MedianPriceValue ?? steamDetails.LowestPriceValue.Value);
-            
-            var profit = minSteamPrice * (1 - _settings.SteamCommissionPercent / 100) - (decimal) x.Price / 100;
+
+            var profit = minSteamPrice * (1 - _settings.SteamCommissionPercent / 100) - (decimal) x.GetPrice / 100 ;
             var margin = profit / minSteamPrice;
 
             if (margin >= _settings.LootFarmSettings.TargetMarginPercentForSaleOnSteam / 100)
@@ -141,7 +141,7 @@ namespace SteamTrader.Core.Services.Sync.LootFarm
                 var dbContext = scope.ServiceProvider.GetRequiredService<SteamTraderDbContext>();
                 
                 var newTradeOffer = new TradeOfferEntity(OfferSourceEnum.LootFarm, OfferSourceEnum.Steam,
-                    (decimal) x.Price / 100, minSteamPrice, margin, gameId, x.Name);
+                    (decimal) x.GetPrice / 100, minSteamPrice, margin, gameId, x.Name);
                 await dbContext.TradeOffers.AddAsync(newTradeOffer);
                 await dbContext.SaveChangesAsync();
             }
@@ -158,8 +158,8 @@ namespace SteamTrader.Core.Services.Sync.LootFarm
             var minSteamPrice = Math.Min(steamDetails.LowestPriceValue.Value,
                 steamDetails.MedianPriceValue ?? steamDetails.LowestPriceValue.Value);
             
-            var profit = x.Price * (1 - _settings.LootFarmSettings.SaleCommissionPercent / 100) - minSteamPrice * 100;
-            var margin = profit / x.Price;
+            var profit = x.GetPrice * (1 - _settings.LootFarmSettings.SaleCommissionPercent / 100) - minSteamPrice * 100;
+            var margin = profit / x.GetPrice;
 
             if (margin >= _settings.LootFarmSettings.TargetMarginPercentForSaleOnLootFarm / 100)
             {
@@ -167,7 +167,7 @@ namespace SteamTrader.Core.Services.Sync.LootFarm
                 var dbContext = scope.ServiceProvider.GetRequiredService<SteamTraderDbContext>();
                 
                 var newTradeOffer = new TradeOfferEntity(OfferSourceEnum.Steam, OfferSourceEnum.LootFarm,
-                    minSteamPrice,(decimal) x.Price / 100, margin, gameId, x.Name);
+                    minSteamPrice,(decimal) x.GetPrice / 100, margin, gameId, x.Name);
                 await dbContext.TradeOffers.AddAsync(newTradeOffer);
                 await dbContext.SaveChangesAsync();
             }

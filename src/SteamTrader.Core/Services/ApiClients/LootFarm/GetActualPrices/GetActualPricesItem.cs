@@ -1,9 +1,11 @@
-﻿using Newtonsoft.Json;
+﻿using System;
+using Newtonsoft.Json;
 
 namespace SteamTrader.Core.Services.ApiClients.LootFarm.GetActualPrices
 {
     public sealed class GetActualPricesItem
     {
+        public long GetPrice => Tr == 0 ? Price : (long) Math.Ceiling(Price * 1.03);
         [JsonProperty("name")]
         public string Name { get; set; }
 
