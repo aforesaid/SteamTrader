@@ -46,6 +46,8 @@ namespace SteamTrader.Core.Configuration
 
         public decimal SaleCommissionPercent { get; set; }
         public decimal TargetMarginPercentForSaleOnSteam { get; set; }
+        public decimal TargetMarginPercentForSaleOnLootFarm { get; set; }
+
         public long MinPriceInUsd { get; set; }
     }
 

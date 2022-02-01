@@ -6,7 +6,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using SteamTrader.Core.Configuration;
-using SteamTrader.Core.Services.ApiClients.DMarket.Requests.GetLastSales;
 using SteamTrader.Core.Services.ApiClients.LootFarm;
 using SteamTrader.Core.Services.ApiClients.LootFarm.GetActualPrices;
 using SteamTrader.Core.Services.ApiClients.Steam;
@@ -162,7 +161,7 @@ namespace SteamTrader.Core.Services.Sync.LootFarm
             var profit = x.Price * (1 - _settings.LootFarmSettings.SaleCommissionPercent / 100) - minSteamPrice * 100;
             var margin = profit / x.Price;
 
-            if (margin >= _settings.LootFarmSettings.TargetMarginPercentForSaleOnSteam / 100)
+            if (margin >= _settings.LootFarmSettings.TargetMarginPercentForSaleOnLootFarm / 100)
             {
                 using var scope = _serviceProvider.CreateScope();
                 var dbContext = scope.ServiceProvider.GetRequiredService<SteamTraderDbContext>();
