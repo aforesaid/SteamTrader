@@ -10,6 +10,7 @@ using SteamTrader.Core.Services.ApiClients.DMarket;
 using SteamTrader.Core.Services.ApiClients.DMarket.Requests.GetItems;
 using SteamTrader.Core.Services.ApiClients.LootFarm;
 using SteamTrader.Core.Services.ApiClients.LootFarm.GetActualPrices;
+using SteamTrader.Core.Services.ApiClients.LootFarm.GetActualPrices.SteamTrader.Core.Services.ApiClients.LootFarm.GetActualPrices;
 using SteamTrader.Domain.Entities;
 using SteamTrader.Domain.Enums;
 using SteamTrader.Infrastructure.Data;
@@ -127,7 +128,7 @@ namespace SteamTrader.Core.Services.Sync.DMarket
 
 
         
-        private async Task HandleDMarketToLootFarm(ApiGetOffersItem dmarketOffer, GetActualPricesItem x, string gameId)
+        private async Task HandleDMarketToLootFarm(ApiGetOffersItem dmarketOffer, ApiLootFarmGetActualPricesForSaleItem x, string gameId)
         {
             var targetPrice = long.Parse(dmarketOffer.Price.Usd);
 

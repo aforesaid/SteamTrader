@@ -2,7 +2,9 @@
 using System.Net.Http;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using SteamTrader.Core.Services.ApiClients.LootFarm.GetActualPrices;
+using SteamTrader.Core.Services.ApiClients.LootFarm.GetActualPrices.SteamTrader.Core.Services.ApiClients.LootFarm.GetActualPrices;
 
 namespace SteamTrader.Core.Services.ApiClients.LootFarm
 {
@@ -14,7 +16,7 @@ namespace SteamTrader.Core.Services.ApiClients.LootFarm
             _httpClient = new HttpClient();
         }
 
-        public async Task<GetActualPricesItem[]> GetPricesForCsGo(bool includeOverstock = false)
+        public async Task<ApiLootFarmGetActualPricesForSaleItem[]> GetPricesForCsGo(bool includeOverstock = false)
         {
             const string url = LootFarmEndpoints.GetCsGoPrices;
 
@@ -22,7 +24,7 @@ namespace SteamTrader.Core.Services.ApiClients.LootFarm
             return items;
         }
 
-        public async Task<GetActualPricesItem[]> GetPricesForDota2(bool includeOverstock = false)
+        public async Task<ApiLootFarmGetActualPricesForSaleItem[]> GetPricesForDota2(bool includeOverstock = false)
         {
             const string url = LootFarmEndpoints.GetDota2Prices;
 
@@ -30,7 +32,7 @@ namespace SteamTrader.Core.Services.ApiClients.LootFarm
             return items;
         }
 
-        public async Task<GetActualPricesItem[]> GetPricesForTf2(bool includeOverstock = false)
+        public async Task<ApiLootFarmGetActualPricesForSaleItem[]> GetPricesForTf2(bool includeOverstock = false)
         {
             const string url = LootFarmEndpoints.GetTf2Prices;
 
@@ -38,12 +40,12 @@ namespace SteamTrader.Core.Services.ApiClients.LootFarm
             return items;
         }
 
-        private async Task<GetActualPricesItem[]> GetActualPrices(string url, bool includeOverstock = false)
+        private async Task<ApiLootFarmGetActualPricesForSaleItem[]> GetActualPrices(string url, bool includeOverstock = false)
         {
             var response = await _httpClient.GetAsync(url);
             var responseString = await response.Content.ReadAsStringAsync();
 
-            var items = JsonConvert.DeserializeObject<GetActualPricesItem[]>(responseString);
+            var items = JsonConvert.DeserializeObject<ApiLootFarmGetActualPricesForSaleItem[]>(responseString);
             
             if (!includeOverstock)
             {
@@ -52,6 +54,17 @@ namespace SteamTrader.Core.Services.ApiClients.LootFarm
             }
             
             return items;
+        }
+        
+        public async Task<ApiLootFarmGetActualPricesForBuyItem[]> GetPricesByAppId(string appId)
+        {
+            var url = LootFarmEndpoints.GetPricesByAppId(appId);
+            var response = await _httpClient.GetAsync(url);
+            
+            var responseString = await response.Content.ReadAsStringAsync();
+            var result = JsonConvert.DeserializeObject<ApiLootFarmGetActualPricesForBuyResponse>(responseString);
+            
+            return result.Items.Values.ToArray();
         }
     }
 }

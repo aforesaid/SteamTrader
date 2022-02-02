@@ -5,6 +5,7 @@ using SteamTrader.Core.Services.ApiClients.AntiCaptca;
 using SteamTrader.Core.Services.ApiClients.DMarket;
 using SteamTrader.Core.Services.ApiClients.LootFarm;
 using SteamTrader.Core.Services.ApiClients.Steam;
+using SteamTrader.Core.Services.Managers;
 using SteamTrader.Core.Services.Proxy;
 using SteamTrader.Core.Services.Sync.DMarket;
 using SteamTrader.Core.Services.Sync.LootFarm;
@@ -26,8 +27,12 @@ namespace SteamTrader.API.Extensions
             services.AddSingleton<DMarketToSteamSyncManager>();
             services.AddSingleton<DMarketToLootFarmSyncManager>();
             services.AddSingleton<LootFarmToSteamSyncManager>();
+            services.AddSingleton<SteamToLootFarmSyncManager>();
+
+            services.AddSingleton<LootFarmManager>();
 
             //services.AddHostedService<DMarketToSteamBackgroundService>();
+            services.AddHostedService<SteamToLootFarmBackgroundService>();
             services.AddHostedService<DMarketToLootFarmBackgroundService>();
             services.AddHostedService<LootFarmToSteamBackgroundService>();
         }
