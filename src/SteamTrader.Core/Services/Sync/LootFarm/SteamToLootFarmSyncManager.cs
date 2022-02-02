@@ -121,11 +121,11 @@ namespace SteamTrader.Core.Services.Sync.LootFarm
                  })
                  return;
              
-             var minSteamPrice = Math.Max(steamDetails.LowestPriceValue.Value,
+             var steamPrice = Math.Max(steamDetails.LowestPriceValue.Value,
                  steamDetails.MedianPriceValue ?? steamDetails.LowestPriceValue.Value);
              
-             var profit = x.Price * (1 - _settings.LootFarmSettings.SaleCommissionPercent / 100) - minSteamPrice * 100;
-             var margin = profit / x.Price;
+             var profit = x.Price * (1 - _settings.LootFarmSettings.SaleCommissionPercent / 100) - steamPrice * 100;
+             var margin = profit / (steamPrice * 100);
  
              if (margin >= _settings.LootFarmSettings.TargetMarginPercentForSaleOnLootFarm / 100)
              {
@@ -133,7 +133,7 @@ namespace SteamTrader.Core.Services.Sync.LootFarm
                  var dbContext = scope.ServiceProvider.GetRequiredService<SteamTraderDbContext>();
                  
                  var newTradeOffer = new TradeOfferEntity(OfferSourceEnum.Steam, OfferSourceEnum.LootFarm,
-                     minSteamPrice,(decimal) x.Price / 100, margin, gameId, x.Name);
+                     steamPrice,(decimal) x.Price / 100, margin, gameId, x.Name);
                  await dbContext.TradeOffers.AddAsync(newTradeOffer);
                  await dbContext.SaveChangesAsync();
              }
