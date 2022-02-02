@@ -53,7 +53,7 @@ namespace SteamTrader.Core.Services.Sync.LootFarm
              
              try
              {
-                 foreach (var gameName in _settings.LootFarmSettings.LootFarmToSteamSyncingGames)
+                 foreach (var gameName in _settings.LootFarmSettings.SteamToLootFarmSyncingGames)
                  {
                      await HandleGame(gameName, enabledBalanceFilter);
                  }

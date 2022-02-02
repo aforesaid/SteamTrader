@@ -43,6 +43,7 @@ namespace SteamTrader.Core.Configuration
     {
         public string[] LootFarmToDMarketSyncingGames { get; set; }
         public string[] LootFarmToSteamSyncingGames { get; set; }
+        public string[] SteamToLootFarmSyncingGames { get; set; }
 
         public decimal SaleCommissionPercent { get; set; }
         public decimal TargetMarginPercentForSaleOnSteam { get; set; }
