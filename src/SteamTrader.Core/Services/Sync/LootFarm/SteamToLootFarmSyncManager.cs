@@ -121,8 +121,8 @@ namespace SteamTrader.Core.Services.Sync.LootFarm
                  })
                  return;
              
-             var steamPrice = Math.Max(steamDetails.LowestPriceValue.Value,
-                 steamDetails.MedianPriceValue ?? steamDetails.LowestPriceValue.Value);
+             var steamPrice = Math.Max(Math.Min(steamDetails.LowestPriceValue.Value,
+                 steamDetails.MedianPriceValue ?? steamDetails.LowestPriceValue.Value), steamDetails.LowestPriceValue.Value);
              
              var profit = x.Price * (1 - _settings.LootFarmSettings.SaleCommissionPercent / 100) - steamPrice * 100;
              var margin = profit / (steamPrice * 100);
