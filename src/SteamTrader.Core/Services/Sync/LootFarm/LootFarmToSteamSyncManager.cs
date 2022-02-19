@@ -24,7 +24,7 @@ namespace SteamTrader.Core.Services.Sync.LootFarm
          private readonly Settings _settings;
          private readonly IServiceProvider _serviceProvider;
          private readonly ISteamApiClient _steamApiClient;
-         
+
          public LootFarmToSteamSyncManager(ILogger<LootFarmToSteamSyncManager> logger, 
              LootFarmManager lootFarmManager, 
              IOptions<Settings> settings,
@@ -130,6 +130,7 @@ namespace SteamTrader.Core.Services.Sync.LootFarm
                  using var scope = _serviceProvider.CreateScope();
                  var dbContext = scope.ServiceProvider.GetRequiredService<SteamTraderDbContext>();
                  
+                 _lootFarmManager.CreateBuyTradeOffer(x);
                  var newTradeOffer = new TradeOfferEntity(OfferSourceEnum.LootFarm, OfferSourceEnum.Steam,
                      (decimal) x.PriceForBuyOnLootFarm / 100, minSteamPrice, margin, gameId, x.Name);
                  await dbContext.TradeOffers.AddAsync(newTradeOffer);

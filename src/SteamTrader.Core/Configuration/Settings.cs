@@ -9,7 +9,7 @@ namespace SteamTrader.Core.Configuration
         public MailConfiguration MailConfiguration { get; set; }
         public DMarketSettings DMarketSettings { get; set; }
         public LootFarmSettings LootFarmSettings { get; set; }
-        public ProxyConfigItem[] Proxies { get; set; }
+        public ProxyConfiguration ProxyConfiguration { get; set; }
         public TimeSpan HttpTimeout { get; set; }
 
         public decimal SteamCommissionPercent { get; set; }
@@ -31,13 +31,14 @@ namespace SteamTrader.Core.Configuration
         public int NeededQtySalesForTwoDays { get; set; }
     }
 
-    public class ProxyConfigItem
+    public class ProxyConfiguration
     {
-        public string Ip { get; set; }
-        public int Port { get; set; }
+        /// <summary>
+        /// Domain:port
+        /// </summary>
+        public string Address { get; set; }
         public string Login { get; set; }
         public string Password { get; set; }
-        public string[] SupportedKeys { get; set; }
     }
     public class LootFarmSettings
     {
@@ -50,6 +51,7 @@ namespace SteamTrader.Core.Configuration
         public decimal TargetMarginPercentForSaleOnLootFarm { get; set; }
 
         public long MinPriceInUsd { get; set; }
+        public string AuthToken { get; set; }
     }
 
     public class MailConfiguration

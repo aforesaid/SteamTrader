@@ -153,11 +153,6 @@ namespace SteamTrader.Core.Services.Sync.DMarket
 
                 _lastSyncTime = syncTime;
             }
-            catch (NotFoundFreeProxyException)
-            {
-                _logger.LogWarning("{0}: По причине заблокированных всех прокси синхронизация останавливается",
-                    nameof(DMarketToSteamSyncManager));
-            }
             finally
             {
                 IsSyncingNow = false;

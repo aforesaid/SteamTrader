@@ -5,16 +5,20 @@ using SteamTrader.Core.Dtos;
 using SteamTrader.Core.Services.ApiClients.LootFarm;
 using SteamTrader.Core.Services.ApiClients.LootFarm.GetActualPrices.SteamTrader.Core.Services.ApiClients.LootFarm.GetActualPrices;
 using SteamTrader.Core.Services.ApiClients.Steam;
+using SteamTrader.Core.Services.WebSocket;
 
 namespace SteamTrader.Core.Services.Managers
 {
     public class LootFarmManager
     {
         private readonly ILootFarmApiClient _lootFarmApiClient;
+        private readonly LootFarmWebSocketClient _lootFarmWebSocketClient;
 
-        public LootFarmManager(ILootFarmApiClient lootFarmApiClient)
+        public LootFarmManager(ILootFarmApiClient lootFarmApiClient, 
+            LootFarmWebSocketClient lootFarmWebSocketClient)
         {
             _lootFarmApiClient = lootFarmApiClient;
+            _lootFarmWebSocketClient = lootFarmWebSocketClient;
         }
 
         public async Task<ApiLootFarmGetActualPricesForSaleItem[]> GetItemsForSaleByGameId(string gameId)
@@ -52,8 +56,14 @@ namespace SteamTrader.Core.Services.Managers
                 x.BotItemDetails.Id, 
                 x.BotItemDetails.Tr == 1, 
                 x.Item.Price,
-                gameId)).ToArray();
+                gameId,
+                appId)).ToArray();
             return result;
+        }
+
+        public void CreateBuyTradeOffer(ApiLootFarmBuyItemDto item)
+        {
+            _lootFarmWebSocketClient.SendBuyTrade(item);
         }
     }
 }

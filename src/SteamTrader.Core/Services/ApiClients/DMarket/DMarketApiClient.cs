@@ -31,215 +31,160 @@ namespace SteamTrader.Core.Services.ApiClients.DMarket
 
         public async Task<ApiGetOffersResponse> GetMarketplaceItems(string gameId, decimal balance = default, string cursor = null, string title = null, int retryCount = 5)
         {
-            var proxy = await _proxyBalancer.GetFreeProxy(ProxyBalancer.DMarketProxyKey);
+            var proxy = _proxyBalancer.GetProxy;
+            
+            var uri = DMarketEndpoints.GetMarketplaceItems(gameId, title: title, priceTo: balance, cursor: cursor);
 
-            try
+            var currentRetryCount = 0;
+
+            do
             {
-                var uri = DMarketEndpoints.GetMarketplaceItems(gameId, title: title, priceTo: balance, cursor: cursor);
-
-                var currentRetryCount = 0;
-                
-                do
+                try
                 {
-                    try
+                    var requestMessage = CreateRequestMessage<string>(uri, HttpMethod.Get, false);
+
+                    var response = await proxy.SendAsync(requestMessage);
+
+                    if (response.StatusCode is HttpStatusCode.TooManyRequests or HttpStatusCode.Forbidden or
+                        HttpStatusCode.BadGateway)
                     {
-                        var requestMessage = CreateRequestMessage<string>(uri, HttpMethod.Get, false);
-
-                        var response = await proxy.HttpClient.SendAsync(requestMessage);
-
-                        if (response.StatusCode is HttpStatusCode.TooManyRequests or HttpStatusCode.Forbidden or
-                            HttpStatusCode.BadGateway)
-                        {
-                            throw new TooManyRequestsException();
-                        }
-
-                        if (!response.IsSuccessStatusCode)
-                            return null;
-
-                        var responseString = await response.Content.ReadAsStringAsync();
-
-                        var result = JsonConvert.DeserializeObject<ApiGetOffersResponse>(responseString);
-
-                        if (!string.IsNullOrWhiteSpace(title))
-                        {
-                            result.Objects = result.Objects.Where(x => x.Title == title)
-                                .ToArray();
-                        }
-
-                        return result;
+                        throw new TooManyRequestsException();
                     }
-                    catch (TaskCanceledException)
+
+                    if (!response.IsSuccessStatusCode)
+                        return null;
+
+                    var responseString = await response.Content.ReadAsStringAsync();
+
+                    var result = JsonConvert.DeserializeObject<ApiGetOffersResponse>(responseString);
+
+                    if (!string.IsNullOrWhiteSpace(title))
                     {
-                        proxy.Lock(ProxyBalancer.DMarketProxyKey);
-                        proxy = await _proxyBalancer.GetFreeProxy(ProxyBalancer.DMarketProxyKey);
+                        result.Objects = result.Objects.Where(x => x.Title == title)
+                            .ToArray();
                     }
-                    catch (TooManyRequestsException)
-                    {
-                        proxy.Lock(ProxyBalancer.DMarketProxyKey);
-                        proxy = await _proxyBalancer.GetFreeProxy(ProxyBalancer.DMarketProxyKey);
-                    }
-                    catch (Exception)
-                    {
-                        await Task.Delay(3000);
-                        currentRetryCount++;
 
-                        if (retryCount <= currentRetryCount)
-                        {
-                            proxy.Lock(ProxyBalancer.DMarketProxyKey);
-                            throw;
-                        }
+                    return result;
+                }
+                catch (Exception)
+                {
+                    await Task.Delay(3000);
+                    currentRetryCount++;
+
+                    if (retryCount <= currentRetryCount)
+                    {
+                        throw;
                     }
-                } while (currentRetryCount < retryCount);
-                return null;
-            }
-            finally
-            {
-                proxy.SetUnreserved(ProxyBalancer.DMarketProxyKey);
-            }
+                }
+            } while (currentRetryCount < retryCount);
+
+            return null;
         }
 
         public async Task<ApiGetBalanceResponse> GetBalance()
         {
-            var proxy = await _proxyBalancer.GetFreeProxy(ProxyBalancer.DMarketProxyKey);
-            try
-            {
-                var uri = DMarketEndpoints.GetBalance;
+            var proxy = _proxyBalancer.GetProxy;
+            var uri = DMarketEndpoints.GetBalance;
 
-                var requestMessage = CreateRequestMessage<string>(uri, HttpMethod.Get, false);
-                var response = await proxy.HttpClient.SendAsync(requestMessage);
-                var responseString = await response.Content.ReadAsStringAsync();
+            var requestMessage = CreateRequestMessage<string>(uri, HttpMethod.Get, false);
+            var response = await proxy.SendAsync(requestMessage);
+            var responseString = await response.Content.ReadAsStringAsync();
 
-                var result = JsonConvert.DeserializeObject<ApiGetBalanceResponse>(responseString);
-                return result;
-            }
-            finally
-            {
-                proxy.SetUnreserved(ProxyBalancer.DMarketProxyKey);
-            }
+            var result = JsonConvert.DeserializeObject<ApiGetBalanceResponse>(responseString);
+            return result;
         }
 
         public async Task<ApiGetOffersResponse> GetRecommendedOffers(string gameId, string marketplaceName, int retryCount = 5)
         {
-            var proxy = await _proxyBalancer.GetFreeProxy(ProxyBalancer.DMarketProxyKey);
-            try
-            {
-                var uri = DMarketEndpoints.BaseUrl + DMarketEndpoints.GetCurrentOffers(gameId, marketplaceName);
+            var proxy = _proxyBalancer.GetProxy;
+            var uri = DMarketEndpoints.BaseUrl + DMarketEndpoints.GetCurrentOffers(gameId, marketplaceName);
 
-                var currentRetryCount = 0;
-                
-                do
+            var currentRetryCount = 0;
+            
+            do
+            {
+                try
                 {
-                    try
+                    var response = await proxy.GetAsync(uri);
+                    
+                    if (response.StatusCode is HttpStatusCode.TooManyRequests or HttpStatusCode.Forbidden or HttpStatusCode.BadGateway)
                     {
-                        var response = await proxy.HttpClient.GetAsync(uri);
+                        throw new TooManyRequestsException();
+                    }
+
+                    if (!response.IsSuccessStatusCode)
+                        return null;
                         
-                        if (response.StatusCode is HttpStatusCode.TooManyRequests or HttpStatusCode.Forbidden or HttpStatusCode.BadGateway)
-                        {
-                            throw new TooManyRequestsException();
-                        }
+                    var responseString = await response.Content.ReadAsStringAsync();
 
-                        if (!response.IsSuccessStatusCode)
-                            return null;
-                            
-                        var responseString = await response.Content.ReadAsStringAsync();
+                    var result = JsonConvert.DeserializeObject<ApiGetOffersResponse>(responseString);
+                    return result;
+                }
+                catch (Exception)
+                {
+                    await Task.Delay(3000);
+                    currentRetryCount++;
 
-                        var result = JsonConvert.DeserializeObject<ApiGetOffersResponse>(responseString);
-                        return result;
-                    }
-                    catch (TooManyRequestsException)
-                    {
-                        proxy.Lock(ProxyBalancer.DMarketProxyKey);
-                        proxy = await _proxyBalancer.GetFreeProxy(ProxyBalancer.DMarketProxyKey);
-                    }
-                    catch (Exception)
-                    {
-                        await Task.Delay(3000);
-                        currentRetryCount++;
-
-                        if (retryCount <= currentRetryCount)
-                            throw;
-                    }
-                } while (currentRetryCount < retryCount);
-                return null;
-            }
-            finally
-            {
-                proxy.SetUnreserved(ProxyBalancer.DMarketProxyKey);
-            }
+                    if (retryCount <= currentRetryCount)
+                        throw;
+                }
+            } while (currentRetryCount < retryCount);
+            return null;
         }
 
         public async Task<ApiGetLastSalesResponse> GetLastSales(string gameId, string name, int retryCount = 5)
         {
-            var proxy = await _proxyBalancer.GetFreeProxy(ProxyBalancer.DMarketProxyKey);
+            var proxy = _proxyBalancer.GetProxy;
+            var uri = DMarketEndpoints.BaseUrl + DMarketEndpoints.GetLastSalesHistory(gameId, name);
 
-            try
+            var currentRetryCount = 0;
+            
+            do
             {
-                var uri = DMarketEndpoints.BaseUrl + DMarketEndpoints.GetLastSalesHistory(gameId, name);
-
-                var currentRetryCount = 0;
-                
-                do
+                try
                 {
-                    try
-                    {
-                        var response = await proxy.HttpClient.GetAsync(uri);
+                    var response = await proxy.GetAsync(uri);
 
-                        if (response.StatusCode is HttpStatusCode.TooManyRequests or HttpStatusCode.Forbidden or HttpStatusCode.BadGateway)
-                        {
-                            throw new TooManyRequestsException();
-                        }
-
-                        if (!response.IsSuccessStatusCode)
-                            return null;
-                            
-                        var responseString = await response.Content.ReadAsStringAsync();
-                        var result = JsonConvert.DeserializeObject<ApiGetLastSalesResponse>(responseString);
-                       
-                        return result;
-                    }
-                    catch (TooManyRequestsException)
+                    if (response.StatusCode is HttpStatusCode.TooManyRequests or HttpStatusCode.Forbidden or HttpStatusCode.BadGateway)
                     {
-                        proxy.Lock(ProxyBalancer.DMarketProxyKey);
-                        proxy = await _proxyBalancer.GetFreeProxy(ProxyBalancer.DMarketProxyKey);
+                        throw new TooManyRequestsException();
                     }
-                    catch (Exception)
-                    {
-                        await Task.Delay(3000);
-                        currentRetryCount++;
 
-                        if (retryCount <= currentRetryCount)
-                            throw;
-                    }
-                } while (currentRetryCount < retryCount);
-                return null;
-            }
-            finally
-            {
-                proxy.SetUnreserved(ProxyBalancer.DMarketProxyKey);
-            }
+                    if (!response.IsSuccessStatusCode)
+                        return null;
+                        
+                    var responseString = await response.Content.ReadAsStringAsync();
+                    var result = JsonConvert.DeserializeObject<ApiGetLastSalesResponse>(responseString);
+                   
+                    return result;
+                }
+                catch (Exception)
+                {
+                    await Task.Delay(3000);
+                    currentRetryCount++;
+
+                    if (retryCount <= currentRetryCount)
+                        throw;
+                }
+            } while (currentRetryCount < retryCount);
+            return null;
         }
 
         public async Task BuyOffer(Guid offerId, long amount)
         {
-            var proxy = await _proxyBalancer.GetFreeProxy(ProxyBalancer.DMarketProxyKey);
-            try
-            {
-                var uri = DMarketEndpoints.PatchBuyOffer;
+            var proxy = _proxyBalancer.GetProxy;
 
-                var body = new ApiPatchBuyOrderRequest(
-                    new[]
-                    {
-                        new ApiPatchBuyOrderItem(offerId, amount)
-                    });
+            var uri = DMarketEndpoints.PatchBuyOffer;
 
-                var request = CreateRequestMessage(uri, HttpMethod.Patch, true, body);
-                var response = await proxy.HttpClient.SendAsync(request);
-                var responseString = await response.Content.ReadAsStringAsync();
-            }
-            finally
-            {
-                proxy.SetUnreserved(ProxyBalancer.DMarketProxyKey);
-            }
+            var body = new ApiPatchBuyOrderRequest(
+                new[]
+                {
+                    new ApiPatchBuyOrderItem(offerId, amount)
+                });
+
+            var request = CreateRequestMessage(uri, HttpMethod.Patch, true, body);
+            var response = await proxy.SendAsync(request);
+            var responseString = await response.Content.ReadAsStringAsync();
         }
 
         private HttpRequestMessage CreateRequestMessage<TRequest>(string uri, HttpMethod method, bool hasBody, TRequest request = default)

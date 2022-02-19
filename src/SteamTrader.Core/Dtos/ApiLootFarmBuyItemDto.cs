@@ -13,7 +13,8 @@ namespace SteamTrader.Core.Dtos
             string subjectId,
             bool isTradable,
             long price,
-            string gameId)
+            string gameId,
+            string appId)
         {
             Name = name;
             BotId = botId;
@@ -32,5 +33,6 @@ namespace SteamTrader.Core.Dtos
         public bool IsTradable { get; set; }
         public long Price { get; set; }
         public string GameId { get; set; }
+        public string AppId { get; set; }
     }
 }

@@ -9,6 +9,7 @@ using SteamTrader.Core.Services.Managers;
 using SteamTrader.Core.Services.Proxy;
 using SteamTrader.Core.Services.Sync.DMarket;
 using SteamTrader.Core.Services.Sync.LootFarm;
+using SteamTrader.Core.Services.WebSocket;
 
 namespace SteamTrader.API.Extensions
 {
@@ -28,13 +29,13 @@ namespace SteamTrader.API.Extensions
             services.AddSingleton<DMarketToLootFarmSyncManager>();
             services.AddSingleton<LootFarmToSteamSyncManager>();
             services.AddSingleton<SteamToLootFarmSyncManager>();
-
+            services.AddSingleton<LootFarmWebSocketClient>();
             services.AddSingleton<LootFarmManager>();
 
             //services.AddHostedService<DMarketToSteamBackgroundService>();
             services.AddHostedService<SteamToLootFarmBackgroundService>();
             services.AddHostedService<DMarketToLootFarmBackgroundService>();
-            services.AddHostedService<LootFarmToSteamBackgroundService>();
+            // services.AddHostedService<LootFarmToSteamBackgroundService>();
         }
     }
 }

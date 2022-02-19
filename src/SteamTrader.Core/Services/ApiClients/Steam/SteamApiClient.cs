@@ -23,7 +23,7 @@ namespace SteamTrader.Core.Services.ApiClients.Steam
 
         public async Task<ApiGetSalesForItemResponse> GetSalesForItem(string itemName, string gameId, int retryCount = 5)
         {
-            var currentProxy = await _proxyBalancer.GetFreeProxy(ProxyBalancer.SteamProxyKey);
+            var currentProxy = _proxyBalancer.GetProxy;
 
             var appId = GetAppIdByGameId(gameId);
             var uri = GetSalesForItemUri(itemName, appId);
@@ -35,13 +35,7 @@ namespace SteamTrader.Core.Services.ApiClients.Steam
                 {
                     try
                     {
-                        var response = await currentProxy.HttpClient.GetAsync(uri);
-
-                        if (response.StatusCode is HttpStatusCode.TooManyRequests)
-                        {
-                            currentProxy.Lock(ProxyBalancer.SteamProxyKey);
-                            return await GetSalesForItem(itemName, gameId);
-                        }
+                        var response = await currentProxy.GetAsync(uri);
 
                         if (!response.IsSuccessStatusCode)
                             return null;
@@ -49,11 +43,6 @@ namespace SteamTrader.Core.Services.ApiClients.Steam
                         var responseString = await response.Content.ReadAsStringAsync();
                         var result = JsonConvert.DeserializeObject<ApiGetSalesForItemResponse>(responseString);
                         return result;
-                    }
-                    catch (TooManyRequestsException)
-                    {
-                        currentProxy.Lock(ProxyBalancer.SteamProxyKey);
-                        currentProxy = await _proxyBalancer.GetFreeProxy(ProxyBalancer.DMarketProxyKey);
                     }
                     catch (Exception)
                     {
@@ -67,29 +56,11 @@ namespace SteamTrader.Core.Services.ApiClients.Steam
 
                 return null;
             }
-            catch (TaskCanceledException)
-            {
-                currentProxy.Lock(ProxyBalancer.SteamProxyKey);
-
-                await Task.Yield();
-                return await GetSalesForItem(itemName, gameId);
-            }
-            catch (NotFoundFreeProxyException)
-            {
-                currentProxy.Lock(ProxyBalancer.SteamProxyKey);
-                throw;
-            }
             catch (Exception e)
             {
-                currentProxy.Lock(ProxyBalancer.SteamProxyKey);
-
-                _logger.LogError(e, "{0}: Не удалось обработать получение данных из Steam, запрос {@1}, ProxyId: {2}",
-                    nameof(SteamApiClient), uri, currentProxy.ProxyId);
+                _logger.LogError(e, "{0}: Не удалось обработать получение данных из Steam, запрос {@1}",
+                    nameof(SteamApiClient), uri);
                 throw;
-            }
-            finally
-            {
-                currentProxy.SetUnreserved(ProxyBalancer.SteamProxyKey);
             }
         }
 
