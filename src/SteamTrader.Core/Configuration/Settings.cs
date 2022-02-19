@@ -14,8 +14,6 @@ namespace SteamTrader.Core.Configuration
 
         public decimal SteamCommissionPercent { get; set; }
         public decimal TargetDMarketToSteamProfitPercent { get; set; }
-        public Dictionary<string, TimeSpan> ProxyLockTime { get; set; }
-
     }
 
     public class DMarketSettings

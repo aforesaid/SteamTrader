@@ -29,7 +29,7 @@ namespace SteamTrader.API.Extensions
             services.AddSingleton<DMarketToLootFarmSyncManager>();
             services.AddSingleton<LootFarmToSteamSyncManager>();
             services.AddSingleton<SteamToLootFarmSyncManager>();
-            services.AddSingleton<LootFarmWebSocketClient>();
+            //services.AddSingleton<LootFarmWebSocketClient>();
             services.AddSingleton<LootFarmManager>();
 
             //services.AddHostedService<DMarketToSteamBackgroundService>();
