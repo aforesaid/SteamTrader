@@ -34,10 +34,10 @@ namespace SteamTrader.API.Extensions
             services.AddSingleton<LootFarmToDMarketSyncManager>();
 
             services.AddHostedService<DMarketToSteamBackgroundService>();
-            services.AddHostedService<SteamToLootFarmBackgroundService>();
-            services.AddHostedService<DMarketToLootFarmBackgroundService>();
+            //services.AddHostedService<SteamToLootFarmBackgroundService>();
+            //services.AddHostedService<DMarketToLootFarmBackgroundService>();
             services.AddHostedService<LootFarmToSteamBackgroundService>();
-            services.AddHostedService<LootFarmToDMarketBackgroundService>();
+            //services.AddHostedService<LootFarmToDMarketBackgroundService>();
         }
     }
 }
