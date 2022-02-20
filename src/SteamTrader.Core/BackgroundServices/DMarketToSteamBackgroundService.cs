@@ -35,7 +35,7 @@ namespace SteamTrader.Core.BackgroundServices
         {
             try
             {
-                await _syncManager.Sync(true);
+                await _syncManager.Sync();
             }
             catch (Exception e)
             {
