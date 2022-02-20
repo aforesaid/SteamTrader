@@ -54,7 +54,7 @@ namespace SteamTrader.Core.Services.Sync.DMarket
             
             try
             {
-                foreach (var gameName in _settings.LootFarmSettings.LootFarmToDMarketSyncingGames)
+                foreach (var gameName in _settings.DMarketSettings.DMarketToLootFarmSyncingGames)
                 {
                     await HandleGameLootFarmToDMarket(gameName, enabledBalanceFilter);
                 }

@@ -31,11 +31,13 @@ namespace SteamTrader.API.Extensions
             services.AddSingleton<SteamToLootFarmSyncManager>();
             //services.AddSingleton<LootFarmWebSocketClient>();
             services.AddSingleton<LootFarmManager>();
+            services.AddSingleton<LootFarmToDMarketSyncManager>();
 
             //services.AddHostedService<DMarketToSteamBackgroundService>();
             services.AddHostedService<SteamToLootFarmBackgroundService>();
             services.AddHostedService<DMarketToLootFarmBackgroundService>();
             services.AddHostedService<LootFarmToSteamBackgroundService>();
+            services.AddHostedService<LootFarmToDMarketBackgroundService>();
         }
     }
 }
