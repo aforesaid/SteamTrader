@@ -35,7 +35,7 @@ namespace SteamTrader.API.Extensions
 
             services.AddHostedService<DMarketToSteamBackgroundService>();
             //services.AddHostedService<SteamToLootFarmBackgroundService>();
-            //services.AddHostedService<DMarketToLootFarmBackgroundService>();
+            services.AddHostedService<DMarketToLootFarmBackgroundService>();
             services.AddHostedService<LootFarmToSteamBackgroundService>();
             //services.AddHostedService<LootFarmToDMarketBackgroundService>();
         }
