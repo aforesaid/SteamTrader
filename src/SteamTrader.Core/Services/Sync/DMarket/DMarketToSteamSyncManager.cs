@@ -98,7 +98,7 @@ namespace SteamTrader.Core.Services.Sync.DMarket
                             var unixTimeLastUpdated = new DateTimeOffset(_lastSyncTime.Value).ToUnixTimeSeconds();
                             filteringItems = filteringItems.Where(x => x.CreatedAt > unixTimeLastUpdated);
                         }
-
+                        
                         using var semaphoreSlim = new SemaphoreSlim(10);
 
                         var tasks = filteringItems.Select(async x =>
@@ -126,7 +126,7 @@ namespace SteamTrader.Core.Services.Sync.DMarket
                                     await HandleItemBuyInDMarketSaleInSteam(minSteamPrice, sellPrice, x.Title, gameId);
                                 }
 
-                                await HandleItemBuyInSteamSaleInDMarket(minSteamPrice, sellPrice, x.Title, gameId);
+                                await HandleItemBuyInSteamSaleInDMarket(minSteamPrice, x.Title, gameId);
                             }
                             catch
                             {
@@ -175,28 +175,32 @@ namespace SteamTrader.Core.Services.Sync.DMarket
                 await dbContext.SaveChangesAsync();
             }
         }
-        private async Task HandleItemBuyInSteamSaleInDMarket(decimal minSteamPrice, decimal sellPrice, string title, string gameId)
+        private async Task HandleItemBuyInSteamSaleInDMarket(decimal minSteamPrice, string title, string gameId)
         {
-            var dMarketDetails = await _dMarketApiClient.GetLastSales(gameId, title);
-            var countLastSales = dMarketDetails.LastSales
-                .Count(i => DateTimeOffset.FromUnixTimeSeconds(i.Date) > DateTime.Today.AddDays(-2));
+            var cumulativePricesDMarket = await _dMarketApiClient.GetCumulativePrices(gameId, title);
+           
+            var minTargetPrice = cumulativePricesDMarket.Targets.FirstOrDefault()?.Price;
+            var minOfferPrice = cumulativePricesDMarket.Offers.FirstOrDefault()?.Price;
+            
+            if (!minTargetPrice.HasValue || !minOfferPrice.HasValue)
+                return;
 
-            if (countLastSales >= _settings.DMarketSettings.NeededQtySalesForTwoDays)
+            var sellPrice = Math.Min(minTargetPrice.Value, minOfferPrice.Value);
+
+            var profit = sellPrice * (1 - _settings.DMarketSettings.SaleCommissionPercent / 100) -
+                         minSteamPrice;
+            
+            var margin = profit / minSteamPrice;
+            if (margin > -0.15M)
             {
-                var profit = sellPrice * (1 - _settings.DMarketSettings.SaleCommissionPercent / 100) -
-                             minSteamPrice;
-                var margin = profit / minSteamPrice;
-                if (margin > -0.3M)
-                {
-                    using var scope = _serviceProvider.CreateScope();
-                    var dbContext = scope.ServiceProvider.GetRequiredService<SteamTraderDbContext>();
+                using var scope = _serviceProvider.CreateScope();
+                var dbContext = scope.ServiceProvider.GetRequiredService<SteamTraderDbContext>();
 
-                    var newTradeOffer = new TradeOfferEntity(OfferSourceEnum.Steam, OfferSourceEnum.DMarket,
-                        minSteamPrice,
-                        sellPrice, margin, gameId, title);
-                    await dbContext.TradeOffers.AddAsync(newTradeOffer);
-                    await dbContext.SaveChangesAsync();
-                }
+                var newTradeOffer = new TradeOfferEntity(OfferSourceEnum.Steam, OfferSourceEnum.DMarket,
+                    minSteamPrice,
+                    sellPrice, margin, gameId, title);
+                await dbContext.TradeOffers.AddAsync(newTradeOffer);
+                await dbContext.SaveChangesAsync();
             }
         }
     }

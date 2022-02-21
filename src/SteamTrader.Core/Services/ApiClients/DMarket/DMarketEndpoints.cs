@@ -15,7 +15,9 @@ namespace SteamTrader.Core.Services.ApiClients.DMarket
             => $"/marketplace-api/v1/last-sales?Title={HttpUtility.UrlEncode(name)}&GameID={HttpUtility.UrlEncode(gameId)}&Currency=USD";
 
         public static string PatchBuyOffer = "/exchange/v1/offers-buy";
-        
+
+        public static string GetCumulativePrices(string gameId, string name)
+            => $"/marketplace-api/v1/cumulative-price-levels?Title={HttpUtility.UrlEncode(name)}&GameID={HttpUtility.UrlEncode(gameId)}";
         public static string GetCurrentOffers(string gameId, string marketplaceHashName)
             => $"/exchange/v1/recommendation/preview/offers?marketHashName={HttpUtility.UrlEncode(marketplaceHashName)}&gameId={HttpUtility.UrlEncode(gameId)}&marketType=dmarket";
 

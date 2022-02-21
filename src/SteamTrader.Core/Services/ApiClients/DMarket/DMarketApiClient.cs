@@ -10,6 +10,7 @@ using Newtonsoft.Json;
 using SteamTrader.Core.Configuration;
 using SteamTrader.Core.Helpers;
 using SteamTrader.Core.Services.ApiClients.DMarket.Requests.GetBalance;
+using SteamTrader.Core.Services.ApiClients.DMarket.Requests.GetCumulativePrices;
 using SteamTrader.Core.Services.ApiClients.DMarket.Requests.GetItems;
 using SteamTrader.Core.Services.ApiClients.DMarket.Requests.GetLastSales;
 using SteamTrader.Core.Services.ApiClients.DMarket.Requests.PatchBuyOrder;
@@ -91,6 +92,19 @@ namespace SteamTrader.Core.Services.ApiClients.DMarket
             var responseString = await response.Content.ReadAsStringAsync();
 
             var result = JsonConvert.DeserializeObject<ApiGetBalanceResponse>(responseString);
+            return result;
+        }
+
+        public async Task<ApiGetCumulativePricesResponse> GetCumulativePrices(string gameId, string name)
+        {
+            var proxy = _proxyBalancer.GetProxy;
+            var uri = DMarketEndpoints.GetCumulativePrices(gameId, name);
+
+            var requestMessage = CreateRequestMessage<string>(uri, HttpMethod.Get, false);
+            var response = await proxy.SendAsync(requestMessage);
+            var responseString = await response.Content.ReadAsStringAsync();
+
+            var result = JsonConvert.DeserializeObject<ApiGetCumulativePricesResponse>(responseString);
             return result;
         }
 
