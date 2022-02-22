@@ -118,15 +118,17 @@ namespace SteamTrader.Core.Services.Sync.DMarket
                                     LowestPriceValue: { }
                                 })
                                     return;
-                                var minSteamPrice = Math.Min(steamDetails.LowestPriceValue.Value,
+                                var minSteamPriceForSale = Math.Min(steamDetails.LowestPriceValue.Value,
                                     steamDetails.MedianPriceValue ?? 0);
+                                var minSteamPriceForBuy = Math.Min(Math.Max(steamDetails.LowestPriceValue.Value,
+                                    steamDetails.MedianPriceValue ?? 0), steamDetails.LowestPriceValue.Value);
                                 
                                 if (x.Extra.TradeLock <= _settings.DMarketSettings.MaxTradeBan)
                                 {
-                                    await HandleItemBuyInDMarketSaleInSteam(minSteamPrice, sellPrice, x.Title, gameId);
+                                    await HandleItemBuyInDMarketSaleInSteam(minSteamPriceForSale, sellPrice, x.Title, gameId);
                                 }
 
-                                await HandleItemBuyInSteamSaleInDMarket(minSteamPrice, x.Title, gameId);
+                                await HandleItemBuyInSteamSaleInDMarket(minSteamPriceForBuy, x.Title, gameId);
                             }
                             catch
                             {
