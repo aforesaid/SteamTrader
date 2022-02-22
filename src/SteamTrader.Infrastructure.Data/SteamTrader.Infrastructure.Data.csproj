@@ -15,6 +15,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\SteamTrader.Domain.Steam\SteamTrader.Domain.Steam.csproj" />
       <ProjectReference Include="..\SteamTrader.Domain\SteamTrader.Domain.csproj" />
     </ItemGroup>
 

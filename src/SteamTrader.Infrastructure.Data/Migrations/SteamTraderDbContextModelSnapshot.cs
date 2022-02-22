@@ -63,6 +63,66 @@ namespace SteamTrader.Infrastructure.Data.Migrations
 
                     b.ToTable("TradeOffers");
                 });
+
+            modelBuilder.Entity("SteamTrader.Domain.Entities.TradeTaskEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("Created")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("TradeOfferEntityId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("TradeStage")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("Updated")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TradeStage");
+
+                    b.ToTable("TradeTask");
+                });
+
+            modelBuilder.Entity("SteamTrader.Domain.Steam.ItemNames.SteamItemNameEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("Created")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("ItemId")
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<string>("MarketplaceHashName")
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
+                    b.Property<DateTime>("Updated")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ItemId");
+
+                    b.HasIndex("MarketplaceHashName");
+
+                    b.ToTable("SteamItemNames");
+                });
 #pragma warning restore 612, 618
         }
     }
